@@ -15,7 +15,7 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: classic-menu-font-3
+    tag: classic-menu-font-4
     deploy_on_push:
       enabled: true
   http_port: 8080

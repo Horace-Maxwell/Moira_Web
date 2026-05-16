@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-55">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-57">
 </head>
 <body>
   <div class="app-window">
@@ -99,21 +99,29 @@
           <button class="menu-command" type="button" disabled>立命安身(&X)...</button>
           <button class="menu-command" type="button" disabled>选择择日计算&H)...</button>
           <hr>
-          <div class="menu-subhead">项目显示</div>
-          <button class="menu-command" type="button" data-view-target="calculation">✓ 星图计算</button>
-          <button class="menu-command" type="button" data-view-target="eight">✓ 四柱八字</button>
-          <button class="menu-command" type="button" data-view-target="notes">✓ 星图批注</button>
-          <button class="menu-command" type="button" data-view-target="manage">✓ 数据管理系统</button>
-          <div class="menu-subhead">工具列显示</div>
-          <label class="menu-check-row"><input type="checkbox" checked disabled> 档案图示</label>
-          <label class="menu-check-row"><input type="checkbox" checked disabled> 编辑图示</label>
-          <label class="menu-check-row"><input type="checkbox" checked disabled> 选项图标</label>
-          <label class="menu-check-row"><input type="checkbox" checked disabled> 寻找 <span>Ctrl+F</span></label>
+          <details class="menu-cascade">
+            <summary>项目显示</summary>
+            <div class="menu-panel menu-subpanel">
+              <button class="menu-command" type="button" data-view-target="calculation">✓ 星图计算</button>
+              <button class="menu-command" type="button" data-view-target="eight">✓ 四柱八字</button>
+              <button class="menu-command" type="button" data-view-target="notes">✓ 星图批注</button>
+              <button class="menu-command" type="button" data-view-target="manage">✓ 数据管理系统</button>
+            </div>
+          </details>
+          <details class="menu-cascade">
+            <summary>工具列显示</summary>
+            <div class="menu-panel menu-subpanel">
+              <label class="menu-check-row"><input type="checkbox" checked disabled> 档案图示</label>
+              <label class="menu-check-row"><input type="checkbox" checked disabled> 编辑图示</label>
+              <label class="menu-check-row"><input type="checkbox" checked disabled> 选项图标</label>
+              <label class="menu-check-row"><input type="checkbox" checked disabled> 寻找 <span>Ctrl+F</span></label>
+            </div>
+          </details>
           <hr>
           <button class="menu-command" type="button" disabled>选择星曜(&I)...</button>
-          <button class="menu-command" type="button" disabled>选择星曜及强势角距(&J)...</button>
           <button class="menu-command" type="button" disabled>选择角距显示(&O)...</button>
           <button class="menu-command" type="button" disabled>选择相位(&K)...</button>
+          <button class="menu-command" type="button" disabled>选择星曜及强势角距(&J)...</button>
           <button class="menu-command" type="button" disabled>选择分宫制(&H)...</button>
           <button class="menu-command" type="button" disabled>选择回归恒星制(&S)...</button>
           <button class="menu-command" type="button" disabled>选择合盘计算(&U)...</button>
@@ -356,6 +364,6 @@
     <ul id="guardrails"></ul>
   </div>
 
-  <script src="/app.js?v=app-ui-native-55"></script>
+  <script src="/app.js?v=app-ui-native-57"></script>
 </body>
 </html>

@@ -127,7 +127,7 @@ button {
 
 .menu-panel hr {
   width: 100%;
-  margin: 5px 0;
+  margin: 3px 0;
   border: 0;
   border-top: 1px solid #555;
 }
@@ -138,7 +138,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 25px;
+  min-height: 22px;
   color: #f0f0f0;
   font-size: 12px;
   font-weight: 700;
@@ -148,7 +148,7 @@ button {
   width: 100%;
   border: 0;
   border-radius: 3px;
-  padding: 4px 9px;
+  padding: 3px 8px;
   text-align: left;
   background: transparent;
 }
@@ -201,19 +201,55 @@ button {
   justify-content: flex-start;
 }
 
-.menu-subhead {
-  min-height: 23px;
-  padding: 4px 9px;
+.menu-cascade {
+  position: relative;
+}
+
+.menu-cascade > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 22px;
+  padding: 3px 8px;
+  border-radius: 3px;
   color: #f0f0f0;
   font-size: 12px;
   font-weight: 700;
+  cursor: default;
+  list-style: none;
 }
 
-.menu-subhead::after {
+.menu-cascade > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-cascade > summary::after {
   content: "›";
-  float: right;
-  margin-left: 18px;
+  margin-left: 24px;
   color: #c8c8c8;
+}
+
+.menu-cascade:hover > summary,
+.menu-cascade[open] > summary {
+  background: #3f6fc0;
+}
+
+.menu-cascade:not([open]) > .menu-subpanel {
+  display: none;
+}
+
+.menu-cascade:hover > .menu-subpanel,
+.menu-cascade:focus-within > .menu-subpanel {
+  display: grid;
+}
+
+.menu-subpanel {
+  position: fixed;
+  top: var(--submenu-top, 0);
+  left: var(--submenu-left, 0);
+  min-width: 190px;
+  max-height: none;
+  z-index: 80;
 }
 
 .main-tabs {
