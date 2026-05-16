@@ -172,7 +172,7 @@ It checks the desktop-style menu labels, Linux Chinese font availability, health
 
 The repository includes GitHub Actions for web CI and tagged releases:
 
-- `.github/workflows/web-ci.yml` runs script validation, production self-check, golden text fixtures, browser layout checks, and a `linux/amd64` Docker build on `main` and pull requests.
+- `.github/workflows/web-ci.yml` runs script validation, production self-check, golden text fixtures, browser layout checks, the one-command Docker Compose deploy path, and a `linux/amd64` Docker build on `main` and pull requests.
 - `.github/workflows/web-release.yml` runs the same production and UI gates for tags matching `web-v*`, publishes a GHCR image, and uploads a jar plus source archive to the GitHub Release.
 
 Use a tag like this when a web build is ready to ship:

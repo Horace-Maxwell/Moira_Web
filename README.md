@@ -123,7 +123,7 @@ npx playwright install chromium
 
 ## Web Release Workflow
 
-GitHub Actions runs the same production gate and browser layout check on `main` and pull requests. It also builds a `linux/amd64` Docker image so release regressions are caught before someone deploys from another server.
+GitHub Actions runs the same production gate, browser layout check, and one-command Docker Compose deploy path on `main` and pull requests. It also builds a `linux/amd64` Docker image so release regressions are caught before someone deploys from another server.
 
 To publish a web release, push a tag named `web-vX.Y.Z`:
 

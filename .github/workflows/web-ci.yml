@@ -60,6 +60,18 @@ jobs:
       - name: Run browser UI layout check
         run: ./moira-web/scripts/ui-layout-check.sh 18182
 
+      - name: Run one-command Docker Compose deploy
+        run: |
+          cleanup() {
+            docker compose -p moira-web-ci down --remove-orphans || true
+          }
+          trap cleanup EXIT
+          COMPOSE_PROJECT_NAME=moira-web-ci \
+          MOIRA_WEB_PORT=18184 \
+          MOIRA_WEB_UI_CHECK=true \
+          MOIRA_WEB_SKIP_PLAYWRIGHT_INSTALL=true \
+            ./scripts/deploy-local.sh
+
       - name: Build linux/amd64 runtime image
         run: |
           docker buildx build \
