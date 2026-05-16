@@ -96,6 +96,7 @@ export MOIRA_WEB_POLL_SECONDS=2
 DigitalOcean App Platform injects `PORT`; the server reads it automatically when `MOIRA_WEB_PORT` is not set.
 
 For a Docker Compose deployment from the repository root, `./scripts/deploy-local.sh` builds the image, starts the service, waits for the local health endpoints, and then verifies `MOIRA_WEB_VERIFY_URL`. Set that URL to your public reverse-proxy domain when the app is not reached directly through `127.0.0.1`.
+Set `MOIRA_WEB_UI_CHECK=true` when you also want the deploy helper to run the Chromium layout regression against the verified URL after the server is healthy.
 
 ## Production Run
 
@@ -152,6 +153,12 @@ npx playwright install chromium
 ```
 
 That layout check opens the real web app in Chromium and verifies the desktop-like chrome, right control panel width, chart canvas alignment, options submenu positioning, and management table surface.
+
+To run the same browser layout gate against an already deployed server:
+
+```bash
+./scripts/verify-ui-layout.sh https://your-live-url.example
+```
 
 The root-level deployment verifier is safe to run against any server:
 

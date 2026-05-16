@@ -35,6 +35,14 @@ By default this builds the web image locally, starts it on port `8080`, waits fo
 MOIRA_WEB_PORT=18080 ./scripts/deploy-local.sh
 ```
 
+For a stricter post-deploy browser layout gate, enable the optional UI check. This also verifies the compact desktop-style chrome, full options menu, chart canvas alignment, and management table in Chromium:
+
+```bash
+MOIRA_WEB_UI_CHECK=true ./scripts/deploy-local.sh
+```
+
+If the server does not already have Playwright's browser installed, the helper installs npm dependencies and Chromium. On minimal Linux images you may need to run `npx playwright install --with-deps chromium` once with sufficient privileges.
+
 If the server is behind a reverse proxy or public domain, keep the container check local but verify the public URL:
 
 ```bash
@@ -43,12 +51,18 @@ MOIRA_WEB_VERIFY_URL=https://your-domain.example \
 ./scripts/deploy-local.sh
 ```
 
-The script checks Docker, Docker Compose, curl, `/health`, `/ready`, the desktop-style menu shell, chart rendering, static gzip, ETag, cache headers, and the compact Mac-like chart overlay layout.
+The default script checks Docker, Docker Compose, curl, `/health`, `/ready`, the desktop-style menu shell, chart rendering, static gzip, ETag, and cache headers. Set `MOIRA_WEB_UI_CHECK=true` when you also want browser-rendered layout verification.
 
 To verify an already running deployment:
 
 ```bash
 ./scripts/verify-deployment.sh http://127.0.0.1:8080
+```
+
+To verify only the rendered browser UI of an already running deployment:
+
+```bash
+./scripts/verify-ui-layout.sh http://127.0.0.1:8080
 ```
 
 ## Deploy To DigitalOcean

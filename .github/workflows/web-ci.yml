@@ -50,6 +50,7 @@ jobs:
             moira-web/scripts/start-production.sh \
             moira-web/scripts/ui-layout-check.sh \
             scripts/deploy-local.sh \
+            scripts/verify-ui-layout.sh \
             scripts/verify-deployment.sh
           ruby -c moira-web/scripts/golden-text-check.rb
 

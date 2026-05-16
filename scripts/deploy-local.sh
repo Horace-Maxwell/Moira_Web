@@ -7,6 +7,7 @@ BASE_URL="http://127.0.0.1:${PORT_VALUE}"
 VERIFY_URL="${MOIRA_WEB_VERIFY_URL:-$BASE_URL}"
 WAIT_SECONDS="${MOIRA_WEB_WAIT_SECONDS:-120}"
 POLL_SECONDS="${MOIRA_WEB_POLL_SECONDS:-2}"
+UI_CHECK="${MOIRA_WEB_UI_CHECK:-false}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required. Install Docker, then rerun this script." >&2
@@ -42,6 +43,9 @@ while (( elapsed <= WAIT_SECONDS )); do
   if curl --fail --silent "${BASE_URL}/health" >/dev/null \
       && curl --fail --silent "${BASE_URL}/ready" >/dev/null; then
     "$ROOT_DIR/scripts/verify-deployment.sh" "$VERIFY_URL"
+    if [[ "$UI_CHECK" == "true" ]]; then
+      "$ROOT_DIR/scripts/verify-ui-layout.sh" "$VERIFY_URL"
+    fi
     echo "Moira Web is ready: ${VERIFY_URL}"
     exit 0
   fi
