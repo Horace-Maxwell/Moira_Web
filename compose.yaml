@@ -1,0 +1,24 @@
+services:
+  moira-web:
+    build:
+      context: .
+      dockerfile: moira-web/Dockerfile
+      pull: true
+    image: moira-web:local
+    restart: unless-stopped
+    ports:
+      - "${MOIRA_WEB_PORT:-8080}:8080"
+    environment:
+      MOIRA_WEB_HOST: 0.0.0.0
+      MOIRA_WEB_STATIC_DIR: /app/client
+      MOIRA_WEB_RESOURCE_DIR: /app/resources
+      MOIRA_WEB_STATIC_CACHE: "true"
+      MOIRA_WEB_MAX_THREADS: "${MOIRA_WEB_MAX_THREADS:-8}"
+      MOIRA_WEB_MAX_BODY_BYTES: "${MOIRA_WEB_MAX_BODY_BYTES:-2097152}"
+      PORT: 8080
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3

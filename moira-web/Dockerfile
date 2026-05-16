@@ -7,7 +7,11 @@ RUN ./moira-web/scripts/build-server.sh
 FROM eclipse-temurin:11-jre-jammy
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends fontconfig fonts-noto-cjk \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        fontconfig \
+        fonts-arphic-ukai \
+        fonts-noto-cjk \
     && fc-cache -f \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,5 +34,6 @@ ENV MOIRA_WEB_RESOURCE_DIR=/app/resources
 ENV MOIRA_WEB_STATIC_CACHE=true
 ENV LANG=C.UTF-8
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD curl --fail --silent "http://127.0.0.1:${PORT:-8080}/health" >/dev/null || exit 1
 
 CMD ["sh", "-c", "java ${JAVA_OPTS:--Djava.awt.headless=true -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError} -jar /app/moira-web.jar --host=${MOIRA_WEB_HOST:-0.0.0.0} --port=${PORT:-8080} --static-dir=${MOIRA_WEB_STATIC_DIR:-/app/client} --resource-dir=${MOIRA_WEB_RESOURCE_DIR:-/app/resources}"]

@@ -19,13 +19,33 @@ For a full build and smoke test from the repository root:
 ./moira-web/scripts/self-check.sh 18124
 ```
 
+## One-Command Server Deploy
+
+On any server with Docker and Docker Compose v2:
+
+```bash
+./scripts/deploy-local.sh
+```
+
+By default this builds the web image locally, starts it on port `8080`, waits for `/health` and `/ready`, then prints the URL. To use a different host port:
+
+```bash
+MOIRA_WEB_PORT=18080 ./scripts/deploy-local.sh
+```
+
+To verify an already running deployment:
+
+```bash
+./scripts/verify-deployment.sh http://127.0.0.1:8080
+```
+
 ## Deploy To DigitalOcean
 
 The App Platform spec is stored at `moira-web/.do/app.yaml`. The live deployment uses a prebuilt Docker image in DigitalOcean Container Registry, so it does not depend on DigitalOcean's GitHub App permissions.
 
 The current spec uses `apps-d-4vcpu-8gb` with one instance for short high-capacity checks. Scale it down or destroy the app when temporary testing is finished.
 
-Build and push a new image. The runtime image includes CJK fonts because chart PNGs are rendered server-side by Java:
+Build and push a new image. The runtime image installs `fonts-arphic-ukai` and `fonts-noto-cjk`; this keeps Moira's original `font_name` fallback path close to the macOS app, where `STKaiti` is available, while still preventing missing-glyph boxes on Linux servers.
 
 ```bash
 docker build --platform linux/amd64 -f moira-web/Dockerfile \

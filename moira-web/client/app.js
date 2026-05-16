@@ -311,9 +311,11 @@ function formPayload() {
   const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
   const panelRect = form.getBoundingClientRect();
   const pixelRatio = window.devicePixelRatio || 1;
-  const layoutWidth = Math.max(360, Math.round(canvasRect.width));
+  const availableWidth = panelRect.left > canvasRect.left
+    ? panelRect.left - canvasRect.left - 18
+    : canvasRect.width;
+  const layoutWidth = Math.max(360, Math.round(Math.min(canvasRect.width, availableWidth)));
   const layoutHeight = Math.max(360, Math.round(canvasRect.height));
-  const reservedWidth = Math.max(0, Math.round(canvasRect.right - panelRect.left + 8));
   return {
     mode,
     entryType: mode === "pick" ? "pick" : "data",
@@ -337,7 +339,7 @@ function formPayload() {
     imageHeight: String(Math.max(360, Math.round(layoutHeight * pixelRatio))),
     layoutWidth: String(layoutWidth),
     layoutHeight: String(layoutHeight),
-    reservedWidth: String(reservedWidth),
+    reservedWidth: "0",
     imageZoom: String(Math.max(100, Math.round(pixelRatio * 100)))
   };
 }

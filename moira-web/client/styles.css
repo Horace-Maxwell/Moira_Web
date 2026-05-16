@@ -228,6 +228,8 @@ button {
 
 .chart-view {
   position: relative;
+  --control-panel-width: clamp(360px, 24.2vw, 520px);
+  --control-panel-gap: 22px;
 }
 
 .chart-view.active {
@@ -251,6 +253,8 @@ button {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  padding-right: calc(var(--control-panel-width) + var(--control-panel-gap) + 21px);
+  box-sizing: border-box;
 }
 
 .chart-canvas img {
@@ -285,7 +289,7 @@ button {
   top: 13px;
   right: 21px;
   z-index: 3;
-  width: clamp(360px, 24.2vw, 520px);
+  width: var(--control-panel-width);
   min-height: 0;
   overflow: visible;
   padding: 0;
@@ -887,11 +891,27 @@ td button {
   }
 
   .chart-view {
+    display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(520px, 1fr) 420px;
+    grid-template-rows: minmax(520px, 1fr) auto;
+    gap: 8px;
+  }
+
+  .chart-view.active {
+    display: grid;
+  }
+
+  .chart-canvas {
+    position: relative;
+    inset: auto;
+    padding-right: 0;
   }
 
   .control-panel {
-    background: #fff;
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    background: transparent;
   }
 }
