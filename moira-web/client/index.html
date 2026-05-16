@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>七政四餘星盤 - Moira</title>
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-44">
+</head>
+<body>
+  <div class="app-window">
+    <header class="titlebar">
+      <div class="traffic-lights" aria-hidden="true">
+        <span class="light red"></span>
+        <span class="light yellow"></span>
+        <span class="light green"></span>
+      </div>
+      <div class="window-title">七政四餘星盤 - Moira</div>
+      <div class="window-tools" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </div>
+    </header>
+
+    <nav class="main-tabs" aria-label="Moira pages">
+      <button class="tab active" type="button" data-view="chart">星盤</button>
+      <button class="tab" type="button" data-view="calculation">計算</button>
+      <button class="tab" type="button" data-view="eight">八字</button>
+      <button class="tab" type="button" data-view="notes">批注</button>
+      <button class="tab" type="button" data-view="manage">管理</button>
+    </nav>
+
+    <div class="subbar">
+      <span id="viewTitle">星盤 - 回歸制</span>
+      <span class="subbar-status">
+        <span id="serverStatus">Checking</span>
+        <span id="apiVersion">等待服務響應</span>
+      </span>
+    </div>
+
+    <main class="workspace">
+      <section id="chartView" class="view chart-view active" data-view-panel="chart">
+        <div class="chart-canvas">
+          <img id="chartImage" alt="Moira chart preview" hidden>
+          <div id="emptyChart" class="empty-chart">請輸入資料並點擊「計算星盤」。</div>
+        </div>
+
+        <aside class="control-panel">
+          <form id="chartForm" class="app-form">
+            <section class="black-card identity-card">
+              <label class="name-field">
+                名稱輸入
+                <input name="name" value="" autocomplete="name">
+              </label>
+              <fieldset class="gender-field">
+                <legend>性別</legend>
+                <label><input name="sex" type="radio" value="male" checked> 男</label>
+                <label><input name="sex" type="radio" value="female"> 女</label>
+              </fieldset>
+            </section>
+
+            <section class="black-card">
+              <h2>出生年月日時及地點</h2>
+              <div class="moira-date-row" data-datetime="birth">
+                <select data-part="month" aria-label="出生月份"></select>
+                <input data-part="day" value="10" inputmode="numeric" aria-label="出生日">
+                <input data-part="year" value="2006" inputmode="numeric" aria-label="出生年">
+                <input data-part="hour" value="9" inputmode="numeric" aria-label="出生時">
+                <input data-part="minute" value="58" inputmode="numeric" aria-label="出生分">
+                <select data-part="ampm" aria-label="出生上午下午">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+                <span class="spin-button" aria-hidden="true"></span>
+              </div>
+              <input name="birthDate" type="hidden" value="2006-04-10">
+              <input name="birthTime" type="hidden" value="09:58">
+              <select name="country" aria-label="國家">
+                <option value="中國">中國</option>
+                <option value="中国">中国</option>
+                <option value="美國">美國</option>
+                <option value="美国">美国</option>
+              </select>
+              <div class="place-grid">
+                <select name="city" aria-label="城市">
+                  <option value="北京" selected>北京</option>
+                  <option value="上海">上海</option>
+                  <option value="台北">台北</option>
+                  <option value="香港">香港</option>
+                  <option value="洛杉磯">洛杉磯</option>
+                </select>
+                <select name="zone" aria-label="時區">
+                  <option value="Asia/Shanghai">Asia/Shanghai</option>
+                  <option value="Asia/Taipei">Asia/Taipei</option>
+                  <option value="Asia/Hong_Kong">Asia/Hong_Kong</option>
+                  <option value="America/Los_Angeles">America/Los_Angeles</option>
+                </select>
+              </div>
+            </section>
+
+            <section class="black-card">
+              <h2>流年</h2>
+              <div class="moira-date-row" data-datetime="now">
+                <select data-part="month" aria-label="流年月份"></select>
+                <input data-part="day" value="9" inputmode="numeric" aria-label="流年日">
+                <input data-part="year" value="2026" inputmode="numeric" aria-label="流年年">
+                <input data-part="hour" value="12" inputmode="numeric" aria-label="流年時">
+                <input data-part="minute" value="30" inputmode="numeric" aria-label="流年分">
+                <select data-part="ampm" aria-label="流年上午下午">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+                <span class="spin-button" aria-hidden="true"></span>
+              </div>
+              <input name="nowDate" type="hidden" value="2026-04-09">
+              <input name="nowTime" type="hidden" value="12:30">
+            </section>
+
+            <details class="black-card mode-card">
+              <summary>更多設定</summary>
+              <select name="mode">
+                <option value="traditional">七政四餘星盤</option>
+                <option value="pick">天星擇日</option>
+                <option value="western">占星盤</option>
+                <option value="sidereal">鄭氏星案</option>
+              </select>
+              <select name="astroMode">
+                <option value="natal">本命</option>
+                <option value="transit">行運</option>
+                <option value="comparison">比較盤</option>
+                <option value="solar-return">太陽返照</option>
+                <option value="lunar-return">太陰返照</option>
+                <option value="secondary-progression">次限</option>
+              </select>
+              <div class="option-row">
+                <label><input name="showNow" type="checkbox" checked> 流年</label>
+                <label><input name="showAspects" type="checkbox"> 相位</label>
+                <label><input name="daySet" type="checkbox" checked> 晝盤</label>
+              </div>
+              <div class="place-grid">
+                <select name="timeAdjust" aria-label="時間校正">
+                  <option value="0">標準時間</option>
+                  <option value="2" selected>真太陽時</option>
+                </select>
+                <input name="mountainPos" value="0.0" inputmode="decimal" aria-label="山向">
+              </div>
+              <textarea name="note" rows="4" spellcheck="false"></textarea>
+            </details>
+
+            <button class="primary-action" type="submit">計算星盤</button>
+          </form>
+        </aside>
+      </section>
+
+      <section id="calculationView" class="view text-view" data-view-panel="calculation">
+        <pre id="resultBox" class="blue-text">等待連接...</pre>
+      </section>
+
+      <section id="eightView" class="view text-view" data-view-panel="eight">
+        <pre id="eightText" class="blue-text">尚未計算八字資料。</pre>
+      </section>
+
+      <section id="notesView" class="view text-view" data-view-panel="notes">
+        <pre id="noteText" class="blue-text">尚未生成批注資料。</pre>
+      </section>
+
+      <section id="manageView" class="view manage-view" data-view-panel="manage">
+        <div class="manager-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>名稱</th>
+                <th>性別</th>
+                <th>出生時間</th>
+                <th>出生地點</th>
+                <th>批注</th>
+              </tr>
+            </thead>
+            <tbody id="entryTable"></tbody>
+          </table>
+        </div>
+        <label class="manager-import">
+          <span>匯入 / 匯出內容</span>
+          <textarea id="entryImport" rows="4" spellcheck="false"></textarea>
+        </label>
+      </section>
+    </main>
+
+    <footer class="bottom-toolbar">
+      <button id="importMri" type="button">開啟</button>
+      <button id="importEntries" type="button">加入</button>
+      <button id="exportMri" type="button">存檔</button>
+      <button id="exportEntries" type="button">另存新檔</button>
+      <button class="nudge-button" type="button" aria-label="上一列">▲</button>
+      <button class="nudge-button" type="button" aria-label="下一列">▼</button>
+      <button id="saveEntry" type="button">新增</button>
+      <button id="deleteEntry" type="button">刪除</button>
+      <button id="updateEntry" type="button">更新</button>
+      <button id="packEntry" type="button" hidden>Legacy DataEntry</button>
+      <input id="mriFile" type="file" accept=".mri" hidden>
+      <input class="archive-name" aria-label="資料檔名稱">
+      <span class="toolbar-spacer"></span>
+      <span id="rowCount">0 列</span>
+    </footer>
+  </div>
+
+  <div class="hidden-metadata" aria-hidden="true">
+    <div id="textTabs">
+      <button type="button" data-page="calculation">計算</button>
+      <button type="button" data-page="eightCharacters">八字</button>
+      <button type="button" data-page="notes">批注</button>
+    </div>
+    <div id="featureGrid"></div>
+    <ul id="guardrails"></ul>
+  </div>
+
+  <script src="/app.js?v=app-ui-native-44"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+name: moira-web
+region: sfo
+alerts:
+- rule: DEPLOYMENT_FAILED
+ingress:
+  rules:
+  - component:
+      name: moira-web
+    match:
+      path:
+        prefix: /
+services:
+- name: moira-web
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: Horace-Maxwell/Moira_Web
+  source_dir: /
+  dockerfile_path: moira-web/Dockerfile
+  http_port: 8080
+  instance_count: 1
+  instance_size_slug: apps-d-4vcpu-8gb
+  envs:
+  - key: MOIRA_WEB_HOST
+    scope: RUN_TIME
+    value: 0.0.0.0
+  - key: MOIRA_WEB_STATIC_DIR
+    scope: RUN_TIME
+    value: /app/client
+  - key: MOIRA_WEB_RESOURCE_DIR
+    scope: RUN_TIME
+    value: /app/resources
+  - key: MOIRA_WEB_STATIC_CACHE
+    scope: RUN_TIME
+    value: "true"
+  - key: MOIRA_WEB_MAX_THREADS
+    scope: RUN_TIME
+    value: "12"
+  - key: MOIRA_WEB_MAX_BODY_BYTES
+    scope: RUN_TIME
+    value: "2097152"
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 5
+    period_seconds: 10
+    timeout_seconds: 3
+    success_threshold: 1
+    failure_threshold: 3
+  liveness_health_check:
+    http_path: /ready
+    initial_delay_seconds: 10
+    period_seconds: 30
+    timeout_seconds: 3
+    success_threshold: 1
+    failure_threshold: 3
+  termination:
+    drain_seconds: 10
+    grace_period_seconds: 60

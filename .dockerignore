@@ -1,0 +1,13 @@
+.git
+.DS_Store
+build
+dist
+out
+*.class
+*.log
+Moira-jre.exe
+developerID_application.cer
+*.p12
+*.pfx
+*.mobileprovision
+moira-web/build
