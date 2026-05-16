@@ -57,26 +57,29 @@ The App Platform spec is stored at `moira-web/.do/app.yaml`. The live deployment
 
 The current spec uses `apps-d-4vcpu-8gb` with one instance for short high-capacity checks. Scale it down or destroy the app when temporary testing is finished.
 
-Build and push a new image. The runtime image keeps Moira's original `font_name` cascade and installs `fonts-arphic-ukai` plus `fonts-noto-cjk`, so Linux servers fall back to the classic AR PL UKai-style rendering instead of the newer WenKai screen font.
-
-```bash
-docker build --platform linux/amd64 -f moira-web/Dockerfile \
-  -t registry.digitalocean.com/moira-web-horace/moira-web:<tag> .
-docker push registry.digitalocean.com/moira-web-horace/moira-web:<tag>
-```
-
-Update `moira-web/.do/app.yaml` to the same image tag, then deploy:
+The easiest path is to let the deployment helper build and push the Docker image before it updates App Platform. It builds `linux/amd64` by default, which avoids the common Apple Silicon issue where a locally built `arm64` image cannot start on DigitalOcean App Platform.
 
 ```bash
 export DIGITALOCEAN_TOKEN=...
-./moira-web/scripts/deploy-digitalocean.sh
+export DIGITALOCEAN_APP_ID=... # omit this to create a new app
+DIGITALOCEAN_BUILD_IMAGE=true ./moira-web/scripts/deploy-digitalocean.sh
 ```
 
-To update an existing DigitalOcean app instead of creating a new one:
+The runtime image keeps Moira's original `font_name` cascade and installs `fonts-arphic-ukai` plus `fonts-noto-cjk`, so Linux servers fall back to the classic AR PL UKai-style rendering instead of the newer WenKai screen font.
+
+If you intentionally want to build and push manually, use `buildx` and keep the tag in `moira-web/.do/app.yaml` in sync:
+
+```bash
+docker buildx build --platform linux/amd64 -f moira-web/Dockerfile \
+  -t registry.digitalocean.com/moira-web-horace/moira-web:<tag> \
+  --push .
+```
+
+Then deploy without rebuilding:
 
 ```bash
 export DIGITALOCEAN_TOKEN=...
-export DIGITALOCEAN_APP_ID=...
+export DIGITALOCEAN_APP_ID=... # omit this to create a new app
 ./moira-web/scripts/deploy-digitalocean.sh
 ```
 

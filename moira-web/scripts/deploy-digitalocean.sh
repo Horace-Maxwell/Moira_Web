@@ -27,6 +27,47 @@ trap 'rm -f "${tmp_spec}" "${tmp_response}" "${tmp_deployments}" "${tmp_deployme
 
 ruby -ryaml -rjson -e 'puts JSON.generate({spec: YAML.load_file(ARGV.fetch(0))})' "${SPEC_FILE}" > "${tmp_spec}"
 
+image_ref="$(ruby -ryaml -e '
+  spec = YAML.load_file(ARGV.fetch(0))
+  service = Array(spec["services"]).first
+  image = service && service["image"] || {}
+  registry = image["registry"].to_s
+  repository = image["repository"].to_s
+  tag = image["tag"].to_s
+  if registry.empty? || repository.empty? || tag.empty?
+    exit 1
+  end
+  puts "registry.digitalocean.com/#{registry}/#{repository}:#{tag}"
+' "${SPEC_FILE}")"
+
+if [[ "${DIGITALOCEAN_BUILD_IMAGE:-false}" == "true" ]]; then
+  image_platform="${DIGITALOCEAN_IMAGE_PLATFORM:-linux/amd64}"
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Docker is required when DIGITALOCEAN_BUILD_IMAGE=true." >&2
+    exit 2
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    echo "Docker is installed but the daemon is not running." >&2
+    exit 2
+  fi
+  if ! docker buildx version >/dev/null 2>&1; then
+    echo "Docker buildx is required to publish a ${image_platform} image for App Platform." >&2
+    exit 2
+  fi
+  if [[ "${DIGITALOCEAN_SKIP_DOCKER_LOGIN:-false}" != "true" ]]; then
+    echo "Logging in to DigitalOcean Container Registry..."
+    printf '%s' "${DIGITALOCEAN_TOKEN}" \
+      | docker login registry.digitalocean.com --username "${DIGITALOCEAN_TOKEN}" --password-stdin >/dev/null
+  fi
+  echo "Building and pushing ${image_ref} for ${image_platform}..."
+  docker buildx build \
+    --platform "${image_platform}" \
+    -f "${ROOT_DIR}/moira-web/Dockerfile" \
+    -t "${image_ref}" \
+    --push \
+    "${ROOT_DIR}"
+fi
+
 echo "Checking DigitalOcean credentials..."
 account_status="$(curl -sS -o "${tmp_response}" -w "%{http_code}" \
   -H "Authorization: Bearer ${DIGITALOCEAN_TOKEN}" \

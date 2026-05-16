@@ -48,6 +48,7 @@
 - [x] Package resource files into the Docker runtime image.
 - [x] Configure DigitalOcean resource/static paths and health checks.
 - [x] Make the DigitalOcean helper wait for ACTIVE and verify the live URL.
+- [x] Make the DigitalOcean helper optionally build and push a `linux/amd64` image before deployment.
 - [ ] Put the service behind HTTPS through the production domain.
 - [ ] Add backup strategy if server-side user storage is introduced.
 - [ ] Add release workflow for web builds.

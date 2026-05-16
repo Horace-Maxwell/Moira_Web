@@ -117,15 +117,15 @@ doctl apps create --spec moira-web/.do/app.yaml
 
 This deploys one public service that serves both the frontend and `/api/*` routes. That is intentional for the first stable phase: it avoids CORS drift and keeps the frontend version matched to the Java bridge. DigitalOcean's app spec supports Dockerfile builds, service `http_port`, health checks, and an injected `PORT` environment variable for the service process.
 
-For the repository's prebuilt DOCR image flow, use the root helper instead:
+For the repository's DOCR image flow, use the root helper. Set `DIGITALOCEAN_BUILD_IMAGE=true` when you want the helper to build and push the image before submitting the App Platform spec. The helper uses `docker buildx --platform linux/amd64` by default so deployments created from Apple Silicon machines still run on DigitalOcean App Platform.
 
 ```bash
 export DIGITALOCEAN_TOKEN=...
 export DIGITALOCEAN_APP_ID=... # omit this to create a new app
-./moira-web/scripts/deploy-digitalocean.sh
+DIGITALOCEAN_BUILD_IMAGE=true ./moira-web/scripts/deploy-digitalocean.sh
 ```
 
-That helper submits the app spec, waits for the newest deployment to become `ACTIVE`, and verifies the live URL with the same production gate used for local Docker deploys. Use `DIGITALOCEAN_WAIT=false` only when you intentionally want to submit and monitor the deployment elsewhere.
+If the image tag in `.do/app.yaml` already exists in DOCR, omit `DIGITALOCEAN_BUILD_IMAGE=true` to submit the spec only. The helper waits for the newest deployment to become `ACTIVE` and verifies the live URL with the same production gate used for local Docker deploys. Use `DIGITALOCEAN_WAIT=false` only when you intentionally want to submit and monitor the deployment elsewhere.
 
 ## Self-Check
 
