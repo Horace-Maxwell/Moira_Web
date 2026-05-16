@@ -135,6 +135,13 @@ cd moira-web
 ```
 
 The self-check builds the server, starts the production runner on a temporary local port, verifies HTML/API endpoints, checks the desktop feature manifest, computes all four chart modes, confirms `DataEntry` packing, round-trips a `.mri` archive, and asserts gzip + ETag static asset behavior.
+It also verifies committed golden text fixtures for 七政四余星盘、天星择日、占星盘、郑氏星案 so the migrated web bridge cannot silently drift away from the captured legacy calculation output.
+
+To intentionally refresh those fixtures after validating a legitimate legacy-output change:
+
+```bash
+./moira-web/scripts/golden-text-check.rb --update http://127.0.0.1:8080
+```
 
 The root-level deployment verifier is safe to run against any server:
 

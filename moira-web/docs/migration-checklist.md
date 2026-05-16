@@ -18,7 +18,7 @@
 - [x] Add a request DTO for name, sex, birth date, location, and timezone.
 - [x] Add a response DTO for text output, packed data, and PNG chart output.
 - [x] Add local self-check coverage for 七政四余、天星择日、占星盘、郑氏星案.
-- [ ] Add golden-file regression fixtures comparing desktop and web calculation output.
+- [x] Add golden-file regression fixtures comparing legacy calculation text output through the web bridge.
 
 ## Phase 3: Browser Views
 

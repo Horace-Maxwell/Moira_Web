@@ -97,3 +97,4 @@ Before considering a deployment healthy, run one of these:
 ```
 
 The checks cover the main HTML shell, original-style menu labels, runtime font availability, `/health`, `/ready`, `/api/version`, `/api/runtime/options`, `/api/features`, all four chart modes, text output, gzip, ETag, and static cache headers.
+The local self-check additionally compares all four modes against committed golden text fixtures captured from the legacy calculation bridge.

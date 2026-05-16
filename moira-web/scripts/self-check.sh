@@ -48,6 +48,7 @@ if grep -q 'Exception\|StackOverflowError' "$LOG_FILE"; then
 fi
 "$ROOT_DIR/scripts/smoke-test.sh" "$BASE_URL"
 "$ROOT_DIR/../scripts/verify-deployment.sh" "$BASE_URL"
+"$ROOT_DIR/scripts/golden-text-check.rb" "$BASE_URL"
 curl --fail --silent "$BASE_URL/" | grep -q '七政四餘星盤 - Moira'
 curl --fail --silent "$BASE_URL/api/features" | grep -q '七政四余星盘'
 curl --fail --silent "$BASE_URL/api/runtime/options" | grep -q 'Asia/Shanghai'
