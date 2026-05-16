@@ -69,9 +69,9 @@ button {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 18px;
   min-width: 0;
-  padding: 0 14px;
+  padding: 0 12px;
   white-space: nowrap;
   overflow: visible;
   border-bottom: 1px solid #191919;
@@ -90,6 +90,7 @@ button {
   display: flex;
   align-items: center;
   height: 30px;
+  padding: 0 4px;
   list-style: none;
   cursor: default;
   color: #f7f7f7;
@@ -105,6 +106,7 @@ button {
 
 .menu[open] summary {
   color: #ffffff;
+  background: #3a3a39;
 }
 
 .menu-panel {
@@ -113,11 +115,13 @@ button {
   left: -8px;
   display: grid;
   min-width: 178px;
+  max-height: calc(100vh - 38px);
   padding: 5px;
   border: 1px solid #111;
   border-radius: 0 0 5px 5px;
   background: #2e2e2d;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.36);
+  overflow: auto;
   z-index: 40;
 }
 
@@ -149,14 +153,35 @@ button {
   background: transparent;
 }
 
-.menu-command:hover,
-.menu-command:focus-visible {
+.menu-command span,
+.menu-options label span {
+  margin-left: auto;
+  color: #c8c8c8;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.menu-command:hover:not(:disabled),
+.menu-command:focus-visible:not(:disabled) {
   background: #3f6fc0;
+}
+
+.menu-command:disabled {
+  color: #898989;
+  cursor: default;
+}
+
+.menu-command:disabled span {
+  color: #777;
 }
 
 .menu-options {
   min-width: 260px;
   gap: 3px;
+}
+
+.menu-options-wide {
+  min-width: 330px;
 }
 
 .menu-options select {
@@ -170,6 +195,25 @@ button {
 .menu-options input[type="checkbox"] {
   width: 12px;
   height: 12px;
+}
+
+.menu-options .menu-check-row {
+  justify-content: flex-start;
+}
+
+.menu-subhead {
+  min-height: 23px;
+  padding: 4px 9px;
+  color: #f0f0f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.menu-subhead::after {
+  content: "›";
+  float: right;
+  margin-left: 18px;
+  color: #c8c8c8;
 }
 
 .main-tabs {
@@ -280,8 +324,8 @@ button {
 
 .chart-view {
   position: relative;
-  --control-panel-width: clamp(360px, 24.2vw, 520px);
-  --control-panel-gap: 22px;
+  --control-panel-width: clamp(382px, 23.4vw, 440px);
+  --control-panel-gap: 18px;
 }
 
 .chart-view.active {
@@ -305,7 +349,7 @@ button {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding-right: calc(var(--control-panel-width) + var(--control-panel-gap) + 21px);
+  padding-right: calc(var(--control-panel-width) + var(--control-panel-gap) + 18px);
   box-sizing: border-box;
 }
 
@@ -338,8 +382,8 @@ button {
 
 .control-panel {
   position: absolute;
-  top: 13px;
-  right: 21px;
+  top: 12px;
+  right: 18px;
   z-index: 3;
   width: var(--control-panel-width);
   min-height: 0;
@@ -352,9 +396,9 @@ button {
   position: relative;
   display: grid;
   align-content: start;
-  gap: 8px;
-  min-height: 296px;
-  padding: 8px;
+  gap: 7px;
+  min-height: 238px;
+  padding: 7px;
   color: var(--control-text);
   background: var(--black-panel);
 }
@@ -431,10 +475,14 @@ button {
 
 .identity-card {
   display: grid;
-  grid-template-columns: 286px 103px;
-  gap: 8px;
+  grid-template-columns: minmax(230px, 1fr) 96px;
+  gap: 7px;
   align-items: start;
-  min-height: 82px;
+  min-height: 70px;
+}
+
+.identity-card > * {
+  min-width: 0;
 }
 
 .identity-card.black-card {
@@ -444,8 +492,8 @@ button {
 }
 
 .identity-card .name-field {
-  width: 275px;
-  margin-left: 5px;
+  width: 100%;
+  margin-left: 0;
   transform: translateY(-4px);
 }
 
@@ -461,7 +509,8 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 5px;
   position: relative;
-  width: 103px;
+  width: 96px;
+  min-width: 0;
   height: 40px;
   min-height: 40px;
   border: 1px solid var(--black-panel-line);
@@ -469,7 +518,7 @@ button {
   margin: 0;
   padding: 17px 7px 4px;
   background: #050505;
-  transform: translateY(19px);
+  transform: translateY(17px);
 }
 
 .gender-field legend {
@@ -499,7 +548,7 @@ textarea {
 }
 
 .identity-card input[name="name"] {
-  height: 40px;
+  height: 34px;
   background:
     linear-gradient(#191919, #101010) 11px 10px / calc(100% - 22px) 20px no-repeat,
     #050505;
@@ -551,26 +600,26 @@ input[type="checkbox"] {
 
 .place-grid {
   display: grid;
-  grid-template-columns: 176px 176px;
+  grid-template-columns: minmax(124px, 1fr) minmax(142px, 1fr);
   gap: 5px;
-  width: 357px;
+  width: calc(100% - 18px);
   margin-left: 9px;
   margin-bottom: 0;
 }
 
 .moira-date-row {
   display: grid;
-  grid-template-columns: 57px 48px 66px 48px 47px 61px 18px;
-  gap: 3px;
-  width: 363px;
+  grid-template-columns: 54px 42px 60px 42px 43px 54px 16px;
+  gap: 2px;
+  width: calc(100% - 18px);
   margin-left: 9px;
   margin-bottom: 5px;
 }
 
 .moira-date-row[data-datetime="now"] {
-  grid-template-columns: 56px 34px 60px 34px 38px 44px 18px;
+  grid-template-columns: 54px 32px 58px 32px 36px 42px 16px;
   gap: 2px;
-  width: 296px;
+  width: 278px;
 }
 
 .moira-date-row input,

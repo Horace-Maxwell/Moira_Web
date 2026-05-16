@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-47">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-53">
 </head>
 <body>
   <div class="app-window">
@@ -12,74 +12,169 @@
       <details class="menu">
         <summary>Moira</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-view-target="chart">關於 Moira Web</button>
-          <button class="menu-command" type="button" data-view-target="calculation">服務狀態</button>
+          <button class="menu-command" type="button" data-view-target="chart">关于 Moira Web</button>
+          <button class="menu-command" type="button" data-view-target="calculation">服务状态</button>
         </div>
       </details>
       <details class="menu">
         <summary>档案 (F)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-action="open">開啟</button>
-          <button class="menu-command" type="button" data-action="append">加入</button>
-          <button class="menu-command" type="button" data-action="save">存檔</button>
-          <button class="menu-command" type="button" data-action="save-as">另存新檔</button>
+          <button class="menu-command" type="button" data-action="new">新增(&N)</button>
+          <button class="menu-command" type="button" data-action="open">开启(&O)... <span>Ctrl+O</span></button>
+          <button class="menu-command" type="button" data-action="save">存档(&S) <span>Ctrl+S</span></button>
+          <button class="menu-command" type="button" data-action="save-as">另存新档(&A)...</button>
           <hr>
-          <button class="menu-command" type="button" data-action="new">新增</button>
-          <button class="menu-command" type="button" data-action="delete">刪除</button>
-          <button class="menu-command" type="button" data-action="update">更新</button>
+          <button class="menu-command" type="button" disabled>打印(&P)... <span>Ctrl+P</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>图形面积设定(&J)...</button>
+          <button class="menu-command" type="button" disabled>图形存盘(&I)... <span>Ctrl+I</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>开启修改档案(&M)...</button>
+          <button class="menu-command" type="button" disabled>修改还原(&R)</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>开启解盘档案(&E)...</button>
+          <button class="menu-command" type="button" disabled>解盘还原(&Q)</button>
+          <button class="menu-command" type="button" disabled>更新解盘档案(&L) <span>F3</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>打印及图形注释(&F)...</button>
+          <button class="menu-command" type="button" disabled>储存设定(&B)...</button>
+          <hr>
+          <button class="menu-command" type="button" data-action="append">加入资料</button>
+          <button class="menu-command" type="button" data-action="delete">删除资料</button>
+          <button class="menu-command" type="button" data-action="update">更新资料</button>
+          <hr>
+          <button class="menu-command" type="button" data-action="close-window">结束(&X)</button>
         </div>
       </details>
       <details class="menu">
         <summary>编辑 (E)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-action="copy">複製</button>
-          <button class="menu-command" type="button" data-action="select-all">全選</button>
+          <button class="menu-command" type="button" data-action="focus-name">输入名称及性别(&N)... <span>Cmd+N</span></button>
+          <button class="menu-command" type="button" disabled>阴历转换(&L)...</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>修改命宫(&H)...</button>
+          <button class="menu-command" type="button" disabled>修改星曜位置(&P)...</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>复原(&Z) <span>Cmd+Z</span></button>
+          <button class="menu-command" type="button" disabled>取消复原(&Y) <span>Cmd+Shift+Z</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>剪下(&X) <span>Cmd+X</span></button>
+          <button class="menu-command" type="button" data-action="copy">复制(&C) <span>Cmd+C</span></button>
+          <button class="menu-command" type="button" disabled>贴上(&V) <span>Cmd+V</span></button>
+          <button class="menu-command" type="button" disabled>删除(&D) <span>DEL</span></button>
+          <hr>
+          <button class="menu-command" type="button" data-action="select-all">全部(&A) <span>Cmd+A</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>粗体</button>
+          <button class="menu-command" type="button" disabled>突显</button>
         </div>
       </details>
       <details class="menu">
         <summary>选项 (P)</summary>
-        <div class="menu-panel menu-options">
-          <label>盤式
+        <div class="menu-panel menu-options menu-options-wide">
+          <label>选择星盘(&M)...
             <select name="mode" form="chartForm">
-              <option value="traditional">七政四餘星盤</option>
-              <option value="pick">天星擇日</option>
-              <option value="western">占星盤</option>
-              <option value="sidereal">鄭氏星案</option>
+              <option value="traditional">七政四余星盘</option>
+              <option value="pick">天星择日</option>
+              <option value="western">占星盘</option>
+              <option value="sidereal">郑氏星案</option>
             </select>
           </label>
-          <label>星盤
+          <hr>
+          <label class="menu-check-row"><input name="showNow" form="chartForm" type="checkbox" checked> 显示流年(&N) <span>Ctrl+R</span></label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示三垣列宿</label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示开禧宿度(&N)</label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示高格林(&N)</label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示单圈(&N)</label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示地平方位 <span>Ctrl+P</span></label>
+          <label class="menu-check-row"><input name="showAspects" form="chartForm" type="checkbox"> 显示相位(&A) <span>Ctrl+L</span></label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 显示神煞注释(&E) <span>Ctrl+E</span></label>
+          <hr>
+          <label>修正时间(&T)...
+            <select name="timeAdjust" form="chartForm" aria-label="时间校正">
+              <option value="0">标准时间</option>
+              <option value="2" selected>真太阳时</option>
+            </select>
+          </label>
+          <button class="menu-command" type="button" disabled>立命安身(&X)...</button>
+          <button class="menu-command" type="button" disabled>选择择日计算&H)...</button>
+          <hr>
+          <div class="menu-subhead">项目显示</div>
+          <button class="menu-command" type="button" data-view-target="calculation">✓ 星图计算</button>
+          <button class="menu-command" type="button" data-view-target="eight">✓ 四柱八字</button>
+          <button class="menu-command" type="button" data-view-target="notes">✓ 星图批注</button>
+          <button class="menu-command" type="button" data-view-target="manage">✓ 数据管理系统</button>
+          <div class="menu-subhead">工具列显示</div>
+          <label class="menu-check-row"><input type="checkbox" checked disabled> 档案图示</label>
+          <label class="menu-check-row"><input type="checkbox" checked disabled> 编辑图示</label>
+          <label class="menu-check-row"><input type="checkbox" checked disabled> 选项图标</label>
+          <label class="menu-check-row"><input type="checkbox" checked disabled> 寻找 <span>Ctrl+F</span></label>
+          <hr>
+          <button class="menu-command" type="button" disabled>选择星曜(&I)...</button>
+          <button class="menu-command" type="button" disabled>选择星曜及强势角距(&J)...</button>
+          <button class="menu-command" type="button" disabled>选择角距显示(&O)...</button>
+          <button class="menu-command" type="button" disabled>选择相位(&K)...</button>
+          <button class="menu-command" type="button" disabled>选择分宫制(&H)...</button>
+          <button class="menu-command" type="button" disabled>选择回归恒星制(&S)...</button>
+          <button class="menu-command" type="button" disabled>选择合盘计算(&U)...</button>
+          <button class="menu-command" type="button" disabled>选择神煞(&S)...</button>
+          <button class="menu-command" type="button" disabled>选择政余格局(&Z)...</button>
+          <hr>
+          <label>星盘模式
             <select name="astroMode" form="chartForm">
               <option value="natal">本命</option>
-              <option value="transit">行運</option>
-              <option value="comparison">比較盤</option>
-              <option value="solar-return">太陽返照</option>
-              <option value="lunar-return">太陰返照</option>
+              <option value="transit">行运</option>
+              <option value="comparison">比较盘</option>
+              <option value="solar-return">太阳返照</option>
+              <option value="lunar-return">太阴返照</option>
               <option value="secondary-progression">次限</option>
             </select>
           </label>
-          <label><input name="showNow" form="chartForm" type="checkbox" checked> 流年</label>
-          <label><input name="showAspects" form="chartForm" type="checkbox"> 相位</label>
-          <label><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
-          <label>校正
-            <select name="timeAdjust" form="chartForm" aria-label="時間校正">
-              <option value="0">標準時間</option>
-              <option value="2" selected>真太陽時</option>
-            </select>
-          </label>
+          <label class="menu-check-row"><input name="daySet" form="chartForm" type="checkbox" checked> 昼盘</label>
+          <hr>
+          <button class="menu-command" type="button" disabled>字形方向设定(&V)...</button>
+          <button class="menu-command" type="button" disabled>字形设定(&F)...</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>色彩设定(&C)...</button>
+          <label class="menu-check-row"><input type="checkbox" disabled> 黑白色(&B)</label>
+          <label class="menu-check-row"><input type="checkbox" disabled> 缩小在系统匣(&Q)</label>
+          <hr>
+          <button class="menu-command" type="button" disabled>繁体中文 (须重新启动)(&L)</button>
+          <button class="menu-command" type="button" disabled>简体中文 (须重新启动)(&L)</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>选项还原 (须重新启动)(&R)</button>
         </div>
       </details>
       <details class="menu">
         <summary>搜索 (S)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-action="focus-name">名稱輸入</button>
-          <button class="menu-command" type="button" data-view-target="manage">資料管理</button>
+          <button class="menu-command" type="button" disabled>流年星法(&T)... <span>Ctrl+K</span></button>
+          <button class="menu-command" type="button" disabled>主限法(&P)... <span>Ctrl+R</span></button>
+          <button class="menu-command" type="button" disabled>次限法(&S)... <span>Ctrl+L</span></button>
+          <button class="menu-command" type="button" disabled>太阳弧角法(&A)... <span>Ctrl+E</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>动盘太阳到山时间(&A)...</button>
+          <hr>
+          <button class="menu-command" type="button" disabled>八字时间(&E)...</button>
+          <button class="menu-command" type="button" disabled>日蚀时间(&M)...</button>
+          <button class="menu-command" type="button" disabled>月蚀时间(&L)...</button>
+          <button class="menu-command" type="button" disabled>相位(&C)...</button>
+          <hr>
+          <button class="menu-command" type="button" data-action="focus-name">名称输入</button>
+          <button class="menu-command" type="button" data-view-target="manage">数据管理</button>
         </div>
       </details>
       <details class="menu">
         <summary>检视 (V)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-view-target="chart">星盤</button>
-          <button class="menu-command" type="button" data-view-target="calculation">計算</button>
+          <button class="menu-command" type="button" data-action="update">更新(&U) <span>F1</span></button>
+          <hr>
+          <button class="menu-command" type="button" disabled>现在时间(&N) <span>F2</span></button>
+          <hr>
+          <label class="menu-check-row"><input type="checkbox" disabled> 高分辨率使用者接口(&I)</label>
+          <hr>
+          <button class="menu-command" type="button" data-view-target="chart">星盘</button>
+          <button class="menu-command" type="button" data-view-target="calculation">计算</button>
           <button class="menu-command" type="button" data-view-target="eight">八字</button>
           <button class="menu-command" type="button" data-view-target="notes">批注</button>
           <button class="menu-command" type="button" data-view-target="manage">管理</button>
@@ -88,8 +183,9 @@
       <details class="menu">
         <summary>说明 (H)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" data-view-target="calculation">計算說明</button>
-          <button class="menu-command" type="button" data-view-target="notes">批注說明</button>
+          <button class="menu-command" type="button" data-view-target="calculation">操作说明(&O)</button>
+          <hr>
+          <button class="menu-command" type="button" data-view-target="notes">关于(&A) 七政四余星盘 - Moira</button>
         </div>
       </details>
     </nav>
@@ -260,6 +356,6 @@
     <ul id="guardrails"></ul>
   </div>
 
-  <script src="/app.js?v=app-ui-native-47"></script>
+  <script src="/app.js?v=app-ui-native-53"></script>
 </body>
 </html>

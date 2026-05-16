@@ -13,6 +13,7 @@ const appWindow = document.querySelector(".app-window");
 const viewTitle = document.querySelector("#viewTitle");
 const rowCount = document.querySelector("#rowCount");
 const tabButtons = [...document.querySelectorAll(".main-tabs .tab")];
+const menus = [...document.querySelectorAll(".menu")];
 const menuCommands = [...document.querySelectorAll(".menu-command")];
 const views = [...document.querySelectorAll("[data-view-panel]")];
 const manageView = document.querySelector("#manageView");
@@ -660,9 +661,11 @@ tabButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
 });
 
-function closeMenus() {
+function closeMenus(exceptMenu = null) {
   document.querySelectorAll(".menu[open]").forEach((menu) => {
-    menu.removeAttribute("open");
+    if (menu !== exceptMenu) {
+      menu.removeAttribute("open");
+    }
   });
 }
 
@@ -685,6 +688,10 @@ function runMenuAction(action) {
     chartField("name")?.focus();
     return;
   }
+  if (action === "close-window") {
+    attemptCloseWindow();
+    return;
+  }
   if (action === "select-all") {
     const node = activeTextNode();
     if (node) {
@@ -701,6 +708,21 @@ function runMenuAction(action) {
   }
 }
 
+async function attemptCloseWindow() {
+  if (entriesDirty && window.confirm("数据已更改，储存档案？")) {
+    try {
+      await exportMri();
+    } catch (error) {
+      showResult({ error: error.message });
+      return;
+    }
+  }
+  window.close();
+  if (!window.closed) {
+    document.body.classList.add("app-exit-requested");
+  }
+}
+
 menuCommands.forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.viewTarget) {
@@ -711,6 +733,34 @@ menuCommands.forEach((button) => {
     }
     closeMenus();
   });
+});
+
+menus.forEach((menu) => {
+  const summary = menu.querySelector("summary");
+  summary.addEventListener("click", (event) => {
+    event.preventDefault();
+    const shouldOpen = !menu.open;
+    closeMenus(menu);
+    menu.open = shouldOpen;
+  });
+  summary.addEventListener("pointerenter", () => {
+    if (document.querySelector(".menu[open]") && !menu.open) {
+      closeMenus(menu);
+      menu.open = true;
+    }
+  });
+});
+
+document.addEventListener("pointerdown", (event) => {
+  if (!event.target.closest(".menubar")) {
+    closeMenus();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMenus();
+  }
 });
 
 textTabs.addEventListener("click", (event) => {
