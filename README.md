@@ -21,9 +21,19 @@ For a full build and smoke test from the repository root:
 
 ## Deploy To DigitalOcean
 
-The App Platform spec is stored at `moira-web/.do/app.yaml`. It deploys from the separate GitHub repository `Horace-Maxwell/Moira_Web`, branch `main`, using `moira-web/Dockerfile`.
+The App Platform spec is stored at `moira-web/.do/app.yaml`. The live deployment uses a prebuilt Docker image in DigitalOcean Container Registry, so it does not depend on DigitalOcean's GitHub App permissions.
 
 The current spec uses `apps-d-4vcpu-8gb` with one instance for short high-capacity checks. Scale it down or destroy the app when temporary testing is finished.
+
+Build and push a new image:
+
+```bash
+docker build --platform linux/amd64 -f moira-web/Dockerfile \
+  -t registry.digitalocean.com/moira-web-horace/moira-web:<tag> .
+docker push registry.digitalocean.com/moira-web-horace/moira-web:<tag>
+```
+
+Update `moira-web/.do/app.yaml` to the same image tag, then deploy:
 
 ```bash
 export DIGITALOCEAN_TOKEN=...

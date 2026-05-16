@@ -11,12 +11,13 @@ ingress:
         prefix: /
 services:
 - name: moira-web
-  github:
-    branch: main
-    deploy_on_push: true
-    repo: Horace-Maxwell/Moira_Web
-  source_dir: /
-  dockerfile_path: moira-web/Dockerfile
+  image:
+    registry_type: DOCR
+    registry: moira-web-horace
+    repository: moira-web
+    tag: 405a18b
+    deploy_on_push:
+      enabled: true
   http_port: 8080
   instance_count: 1
   instance_size_slug: apps-d-4vcpu-8gb
