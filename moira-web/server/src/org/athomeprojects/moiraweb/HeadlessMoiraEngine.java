@@ -35,6 +35,11 @@ final class HeadlessMoiraEngine {
     private static final int DEFAULT_HEIGHT = 760;
     private static final int MIN_IMAGE_SIZE = 360;
     private static final int MAX_IMAGE_SIZE = 5000;
+    private static final String DEFAULT_FONT_NAME =
+            "LXGW WenKai Screen, STKaiti, Kaiti SC, Kaiti TC, "
+                    + "Songti SC, Songti TC, Noto Sans CJK SC, "
+                    + "Noto Sans CJK TC, AR PL UKai CN, AR PL UKai TW, "
+                    + "SimSun, MingLiU";
 
     private final Path resourceRoot;
 
@@ -112,6 +117,10 @@ final class HeadlessMoiraEngine {
         return resourceRoot;
     }
 
+    String fontName() {
+        return Resource.getFontName();
+    }
+
     private void initializeLegacyRuntime() {
         System.setProperty("java.awt.headless", "true");
         Resource.trace = false;
@@ -119,9 +128,17 @@ final class HeadlessMoiraEngine {
         AppRuntime.init(MoiraWebServer.class, resourceRoot.toString());
         Message.setMessage(new BaseMessage() {
         });
-        new Resource(null, "simplified", null, null, null);
+        new Resource(null, "simplified", preferredFontName(), null, null);
         ChartMode.initChartMode();
         City.loadCities("cities.prop");
+    }
+
+    private String preferredFontName() {
+        String configured = System.getenv("MOIRA_WEB_FONT_NAME");
+        if (configured == null || configured.trim().isEmpty()) {
+            return DEFAULT_FONT_NAME;
+        }
+        return configured;
     }
 
     private DataEntry entryFromRequest(Map<String, String> request) {

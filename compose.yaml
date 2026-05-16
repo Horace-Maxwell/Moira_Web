@@ -13,6 +13,7 @@ services:
       MOIRA_WEB_STATIC_DIR: /app/client
       MOIRA_WEB_RESOURCE_DIR: /app/resources
       MOIRA_WEB_STATIC_CACHE: "true"
+      MOIRA_WEB_FONT_NAME: "${MOIRA_WEB_FONT_NAME:-LXGW WenKai Screen, STKaiti, Kaiti SC, Kaiti TC, Songti SC, Songti TC, Noto Sans CJK SC, Noto Sans CJK TC, AR PL UKai CN, AR PL UKai TW, SimSun, MingLiU}"
       MOIRA_WEB_MAX_THREADS: "${MOIRA_WEB_MAX_THREADS:-8}"
       MOIRA_WEB_MAX_BODY_BYTES: "${MOIRA_WEB_MAX_BODY_BYTES:-2097152}"
       PORT: 8080

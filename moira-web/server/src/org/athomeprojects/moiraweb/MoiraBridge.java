@@ -28,6 +28,7 @@ final class MoiraBridge {
         data.put("desktopSource", "Java/SWT Moira");
         data.put("apiVersion", 1);
         data.put("compatibilityPolicy", "additive-web-migration");
+        data.put("fontName", engine.fontName());
         return data;
     }
 

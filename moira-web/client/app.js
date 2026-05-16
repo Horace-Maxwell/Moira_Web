@@ -87,6 +87,55 @@ function boundedNumber(value, fallback, min, max) {
   return Math.min(max, Math.max(min, parsed));
 }
 
+function chartFields() {
+  return [
+    ...form.querySelectorAll("[name]"),
+    ...document.querySelectorAll(`[form="${form.id}"][name]`)
+  ];
+}
+
+function chartField(name) {
+  return form.querySelector(`[name="${name}"]`)
+    || document.querySelector(`[form="${form.id}"][name="${name}"]`)
+    || form.elements[name];
+}
+
+function chartValues() {
+  const values = {};
+  chartFields().forEach((control) => {
+    if (!control.name || control.disabled) {
+      return;
+    }
+    if (control.type === "radio") {
+      if (control.checked) {
+        values[control.name] = control.value;
+      }
+      return;
+    }
+    if (control.type === "checkbox") {
+      if (control.checked) {
+        values[control.name] = "on";
+      }
+      return;
+    }
+    values[control.name] = control.value;
+  });
+  return values;
+}
+
+function setChartValue(name, value) {
+  const controls = chartFields().filter((control) => control.name === name);
+  controls.forEach((control) => {
+    if (control.type === "radio") {
+      control.checked = control.value === value;
+    } else if (control.type === "checkbox") {
+      control.checked = Boolean(value);
+    } else {
+      control.value = value;
+    }
+  });
+}
+
 function populateMonthSelects() {
   document.querySelectorAll(".moira-date-row select[data-part='month']")
     .forEach((select) => {
@@ -306,7 +355,7 @@ function renderFeatures(features) {
 
 function formPayload() {
   syncAllDateTimeWidgets();
-  const formData = Object.fromEntries(new FormData(form).entries());
+  const formData = chartValues();
   const mode = formData.mode || "traditional";
   const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
   const panelRect = form.getBoundingClientRect();
@@ -530,26 +579,26 @@ function modeLabel(mode) {
 }
 
 function fillForm(entry) {
-  ensureOption(form.elements.country, entry.country || "中国");
-  ensureOption(form.elements.city, entry.city || "北京");
-  ensureOption(form.elements.zone, entry.zone || "Asia/Shanghai");
-  form.elements.mode.value = entry.mode || "traditional";
-  form.elements.astroMode.value = entry.astroMode || "natal";
-  form.elements.name.value = entry.name || "";
-  form.elements.sex.value = entry.sex || "male";
-  form.elements.birthDate.value = entry.birthDate || "2006-04-10";
-  form.elements.birthTime.value = entry.birthTime || "09:58";
-  form.elements.nowDate.value = entry.nowDate || entry.birthDate || "2026-04-09";
-  form.elements.nowTime.value = entry.nowTime || entry.birthTime || "12:30";
-  form.elements.country.value = entry.country || "中国";
-  form.elements.city.value = entry.city || "北京";
-  form.elements.zone.value = entry.zone || "Asia/Shanghai";
-  form.elements.showNow.checked = entry.showNow !== false;
-  form.elements.showAspects.checked = entry.showAspects === true;
-  form.elements.daySet.checked = entry.daySet !== false;
-  form.elements.timeAdjust.value = entry.timeAdjust || "2";
-  form.elements.mountainPos.value = entry.mountainPos || "0.0";
-  form.elements.note.value = entry.note || "";
+  ensureOption(chartField("country"), entry.country || "中国");
+  ensureOption(chartField("city"), entry.city || "北京");
+  ensureOption(chartField("zone"), entry.zone || "Asia/Shanghai");
+  setChartValue("mode", entry.mode || "traditional");
+  setChartValue("astroMode", entry.astroMode || "natal");
+  setChartValue("name", entry.name || "");
+  setChartValue("sex", entry.sex || "male");
+  setChartValue("birthDate", entry.birthDate || "2006-04-10");
+  setChartValue("birthTime", entry.birthTime || "09:58");
+  setChartValue("nowDate", entry.nowDate || entry.birthDate || "2026-04-09");
+  setChartValue("nowTime", entry.nowTime || entry.birthTime || "12:30");
+  setChartValue("country", entry.country || "中国");
+  setChartValue("city", entry.city || "北京");
+  setChartValue("zone", entry.zone || "Asia/Shanghai");
+  setChartValue("showNow", entry.showNow !== false);
+  setChartValue("showAspects", entry.showAspects === true);
+  setChartValue("daySet", entry.daySet !== false);
+  setChartValue("timeAdjust", entry.timeAdjust || "2");
+  setChartValue("mountainPos", entry.mountainPos || "0.0");
+  setChartValue("note", entry.note || "");
   updateAllDateTimeWidgets();
 }
 
@@ -599,6 +648,12 @@ form.addEventListener("submit", async (event) => {
 
 form.addEventListener("change", scheduleCompute);
 form.addEventListener("input", scheduleCompute);
+chartFields()
+  .filter((control) => !form.contains(control))
+  .forEach((control) => {
+    control.addEventListener("change", scheduleCompute);
+    control.addEventListener("input", scheduleCompute);
+  });
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));

@@ -4,22 +4,40 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-44">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-46">
 </head>
 <body>
   <div class="app-window">
-    <header class="titlebar">
-      <div class="traffic-lights" aria-hidden="true">
-        <span class="light red"></span>
-        <span class="light yellow"></span>
-        <span class="light green"></span>
-      </div>
-      <div class="window-title">七政四餘星盤 - Moira</div>
-      <div class="window-tools" aria-hidden="true">
-        <span></span>
-        <span></span>
-      </div>
-    </header>
+    <div class="optionbar" aria-label="Moira chart options">
+      <span class="optionbar-title">七政四餘星盤 - Moira</span>
+      <label>盤式
+        <select name="mode" form="chartForm">
+          <option value="traditional">七政四餘星盤</option>
+          <option value="pick">天星擇日</option>
+          <option value="western">占星盤</option>
+          <option value="sidereal">鄭氏星案</option>
+        </select>
+      </label>
+      <label>星盤
+        <select name="astroMode" form="chartForm">
+          <option value="natal">本命</option>
+          <option value="transit">行運</option>
+          <option value="comparison">比較盤</option>
+          <option value="solar-return">太陽返照</option>
+          <option value="lunar-return">太陰返照</option>
+          <option value="secondary-progression">次限</option>
+        </select>
+      </label>
+      <label class="option-check"><input name="showNow" form="chartForm" type="checkbox" checked> 流年</label>
+      <label class="option-check"><input name="showAspects" form="chartForm" type="checkbox"> 相位</label>
+      <label class="option-check"><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
+      <label>校正
+        <select name="timeAdjust" form="chartForm" aria-label="時間校正">
+          <option value="0">標準時間</option>
+          <option value="2" selected>真太陽時</option>
+        </select>
+      </label>
+    </div>
 
     <nav class="main-tabs" aria-label="Moira pages">
       <button class="tab active" type="button" data-view="chart">星盤</button>
@@ -115,36 +133,8 @@
               <input name="nowTime" type="hidden" value="12:30">
             </section>
 
-            <details class="black-card mode-card">
-              <summary>更多設定</summary>
-              <select name="mode">
-                <option value="traditional">七政四餘星盤</option>
-                <option value="pick">天星擇日</option>
-                <option value="western">占星盤</option>
-                <option value="sidereal">鄭氏星案</option>
-              </select>
-              <select name="astroMode">
-                <option value="natal">本命</option>
-                <option value="transit">行運</option>
-                <option value="comparison">比較盤</option>
-                <option value="solar-return">太陽返照</option>
-                <option value="lunar-return">太陰返照</option>
-                <option value="secondary-progression">次限</option>
-              </select>
-              <div class="option-row">
-                <label><input name="showNow" type="checkbox" checked> 流年</label>
-                <label><input name="showAspects" type="checkbox"> 相位</label>
-                <label><input name="daySet" type="checkbox" checked> 晝盤</label>
-              </div>
-              <div class="place-grid">
-                <select name="timeAdjust" aria-label="時間校正">
-                  <option value="0">標準時間</option>
-                  <option value="2" selected>真太陽時</option>
-                </select>
-                <input name="mountainPos" value="0.0" inputmode="decimal" aria-label="山向">
-              </div>
-              <textarea name="note" rows="4" spellcheck="false"></textarea>
-            </details>
+            <input name="mountainPos" type="hidden" value="0.0">
+            <textarea class="hidden-metadata" name="note" rows="1" spellcheck="false"></textarea>
 
             <button class="primary-action" type="submit">計算星盤</button>
           </form>
@@ -215,6 +205,6 @@
     <ul id="guardrails"></ul>
   </div>
 
-  <script src="/app.js?v=app-ui-native-44"></script>
+  <script src="/app.js?v=app-ui-native-46"></script>
 </body>
 </html>

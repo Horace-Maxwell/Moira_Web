@@ -45,7 +45,7 @@ The App Platform spec is stored at `moira-web/.do/app.yaml`. The live deployment
 
 The current spec uses `apps-d-4vcpu-8gb` with one instance for short high-capacity checks. Scale it down or destroy the app when temporary testing is finished.
 
-Build and push a new image. The runtime image installs `fonts-arphic-ukai` and `fonts-noto-cjk`; this keeps Moira's original `font_name` fallback path close to the macOS app, where `STKaiti` is available, while still preventing missing-glyph boxes on Linux servers.
+Build and push a new image. The runtime image pins `LXGW WenKai Screen v1.522` for a sharper screen-friendly Kai-style font that is closer to the macOS app than the older Linux `AR PL UKai` fallback. On macOS it can still fall back to system names such as `STKaiti`, `Kaiti`, and `Songti`.
 
 ```bash
 docker build --platform linux/amd64 -f moira-web/Dockerfile \
