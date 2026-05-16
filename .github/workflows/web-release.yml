@@ -28,8 +28,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install browser test dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
       - name: Run production self-check
         run: ./moira-web/scripts/self-check.sh 18181
+
+      - name: Run browser UI layout check
+        run: ./moira-web/scripts/ui-layout-check.sh 18182
 
       - name: Build release jar
         run: ./moira-web/scripts/build-server.sh

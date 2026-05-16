@@ -4,4 +4,5 @@ dist/
 out/
 *.class
 *.log
+node_modules/
 moira-web/build/

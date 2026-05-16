@@ -403,6 +403,7 @@ async function computePayload(payload) {
 }
 
 function scheduleCompute() {
+  syncMenuCheckmarks();
   window.clearTimeout(autoComputeTimer);
   autoComputeTimer = window.setTimeout(() => {
     computePayload(formPayload()).catch((error) => {
@@ -739,6 +740,16 @@ function runMenuAction(action) {
   }
 }
 
+function syncMenuCheckmarks() {
+  document.querySelectorAll("[data-check-group]").forEach((button) => {
+    const control = chartField(button.dataset.checkGroup);
+    const value = control?.value;
+    const label = button.dataset.label || button.textContent.replace(/^✓\s*/, "");
+    button.dataset.label = label;
+    button.textContent = value === button.dataset.setValue ? `✓ ${label}` : label;
+  });
+}
+
 async function attemptCloseWindow() {
   if (entriesDirty && window.confirm("数据已更改，储存档案？")) {
     try {
@@ -756,6 +767,11 @@ async function attemptCloseWindow() {
 
 menuCommands.forEach((button) => {
   button.addEventListener("click", () => {
+    if (button.dataset.setControl) {
+      setChartValue(button.dataset.setControl, button.dataset.setValue);
+      chartField(button.dataset.setControl)?.dispatchEvent(new Event("change", { bubbles: true }));
+      syncMenuCheckmarks();
+    }
     if (button.dataset.viewTarget) {
       switchView(button.dataset.viewTarget);
     }
@@ -765,6 +781,8 @@ menuCommands.forEach((button) => {
     closeMenus();
   });
 });
+
+syncMenuCheckmarks();
 
 menus.forEach((menu) => {
   const summary = menu.querySelector("summary");

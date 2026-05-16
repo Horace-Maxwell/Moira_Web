@@ -99,9 +99,17 @@ Before considering a deployment healthy, run one of these:
 The checks cover the main HTML shell, original-style menu labels, runtime font availability, `/health`, `/ready`, `/api/version`, `/api/runtime/options`, `/api/features`, all four chart modes, text output, gzip, ETag, and static cache headers.
 The local self-check additionally compares all four modes against committed golden text fixtures captured from the legacy calculation bridge.
 
+For browser-rendered layout regression checks that measure the Mac-like chrome, compact control panel, chart canvas, and cascading options menu:
+
+```bash
+npm ci
+npx playwright install chromium
+./moira-web/scripts/ui-layout-check.sh 18183
+```
+
 ## Web Release Workflow
 
-GitHub Actions runs the same production gate on `main` and pull requests. It also builds a `linux/amd64` Docker image so release regressions are caught before someone deploys from another server.
+GitHub Actions runs the same production gate and browser layout check on `main` and pull requests. It also builds a `linux/amd64` Docker image so release regressions are caught before someone deploys from another server.
 
 To publish a web release, push a tag named `web-vX.Y.Z`:
 

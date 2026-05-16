@@ -3,6 +3,7 @@
 build
 dist
 out
+node_modules
 *.class
 *.log
 Moira-jre.exe

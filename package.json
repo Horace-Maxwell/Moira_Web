@@ -1,0 +1,11 @@
+{
+  "name": "moira-web-deploy",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "playwright": "1.60.0"
+  },
+  "scripts": {
+    "ui:check": "node moira-web/scripts/ui-layout-check.mjs"
+  }
+}

@@ -28,8 +28,10 @@ body {
   overflow: hidden;
   color: #f0f0f0;
   background: #202020;
-  font-family: "Lucida Grande", "Helvetica Neue", "PingFang TC", "PingFang SC", "Heiti TC", sans-serif;
+  font-family: "Lucida Grande", "Helvetica Neue", Arial, "PingFang TC", "PingFang SC", "Heiti TC", sans-serif;
   font-size: 13px;
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
 }
 
 button,
@@ -69,9 +71,9 @@ button {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 2px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 7px;
   white-space: nowrap;
   overflow: visible;
   border-bottom: 1px solid #191919;
@@ -90,13 +92,13 @@ button {
   display: flex;
   align-items: center;
   height: 30px;
-  padding: 0 4px;
+  padding: 0 8px;
   list-style: none;
   cursor: default;
   color: #f7f7f7;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   user-select: none;
 }
 
@@ -114,7 +116,7 @@ button {
   top: 30px;
   left: -8px;
   display: grid;
-  min-width: 178px;
+  min-width: 184px;
   max-height: calc(100vh - 38px);
   padding: 5px;
   border: 1px solid #111;
@@ -181,7 +183,7 @@ button {
 }
 
 .menu-options-wide {
-  min-width: 330px;
+  min-width: 252px;
 }
 
 .menu-options select {

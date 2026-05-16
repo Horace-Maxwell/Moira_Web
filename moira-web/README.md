@@ -143,6 +143,16 @@ To intentionally refresh those fixtures after validating a legitimate legacy-out
 ./moira-web/scripts/golden-text-check.rb --update http://127.0.0.1:8080
 ```
 
+For browser-rendered UI fidelity checks, run this from the repository root:
+
+```bash
+npm ci
+npx playwright install chromium
+./moira-web/scripts/ui-layout-check.sh 18183
+```
+
+That layout check opens the real web app in Chromium and verifies the desktop-like chrome, right control panel width, chart canvas alignment, options submenu positioning, and management table surface.
+
 The root-level deployment verifier is safe to run against any server:
 
 ```bash
@@ -155,8 +165,8 @@ It checks the desktop-style menu labels, Linux Chinese font availability, health
 
 The repository includes GitHub Actions for web CI and tagged releases:
 
-- `.github/workflows/web-ci.yml` runs script validation, production self-check, golden text fixtures, and a `linux/amd64` Docker build on `main` and pull requests.
-- `.github/workflows/web-release.yml` runs the same production gate for tags matching `web-v*`, publishes a GHCR image, and uploads a jar plus source archive to the GitHub Release.
+- `.github/workflows/web-ci.yml` runs script validation, production self-check, golden text fixtures, browser layout checks, and a `linux/amd64` Docker build on `main` and pull requests.
+- `.github/workflows/web-release.yml` runs the same production and UI gates for tags matching `web-v*`, publishes a GHCR image, and uploads a jar plus source archive to the GitHub Release.
 
 Use a tag like this when a web build is ready to ship:
 

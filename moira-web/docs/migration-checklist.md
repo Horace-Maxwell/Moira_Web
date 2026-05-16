@@ -28,6 +28,7 @@
 - [x] Render the chart image from the legacy drawing engine.
 - [x] Add browser-local profile export/import support.
 - [x] Add mobile layout.
+- [x] Add browser-rendered layout regression checks for the Mac-like chrome and chart workspace.
 
 ## Phase 4: Persistence
 
