@@ -47,6 +47,7 @@
 - [x] Add production self-check script.
 - [x] Package resource files into the Docker runtime image.
 - [x] Configure DigitalOcean resource/static paths and health checks.
+- [x] Make the DigitalOcean helper wait for ACTIVE and verify the live URL.
 - [ ] Put the service behind HTTPS through the production domain.
 - [ ] Add backup strategy if server-side user storage is introduced.
 - [ ] Add release workflow for web builds.

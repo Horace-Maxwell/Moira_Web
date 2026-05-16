@@ -24,6 +24,8 @@ For a full build and smoke test from the repository root:
 On any server with Docker and Docker Compose v2:
 
 ```bash
+git clone https://github.com/Horace-Maxwell/Moira_Web.git
+cd Moira_Web
 ./scripts/deploy-local.sh
 ```
 
@@ -68,4 +70,17 @@ export DIGITALOCEAN_APP_ID=...
 ./moira-web/scripts/deploy-digitalocean.sh
 ```
 
+The DigitalOcean deploy script now waits for the newest deployment to become `ACTIVE` and then runs `./scripts/verify-deployment.sh` against the live URL. Set `DIGITALOCEAN_WAIT=false` to submit only, or `DIGITALOCEAN_VERIFY=false` to skip live verification.
+
 The token is read only from the environment and is never stored in this repository.
+
+## Deployment Gates
+
+Before considering a deployment healthy, run one of these:
+
+```bash
+./moira-web/scripts/self-check.sh 18124
+./scripts/verify-deployment.sh https://your-live-url.example
+```
+
+The checks cover the main HTML shell, original-style menu labels, runtime font availability, `/health`, `/ready`, `/api/version`, `/api/runtime/options`, `/api/features`, all four chart modes, text output, gzip, ETag, and static cache headers.
