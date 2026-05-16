@@ -360,12 +360,8 @@ function formPayload() {
   const formData = chartValues();
   const mode = formData.mode || "traditional";
   const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
-  const panelRect = form.getBoundingClientRect();
   const pixelRatio = window.devicePixelRatio || 1;
-  const availableWidth = panelRect.left > canvasRect.left
-    ? panelRect.left - canvasRect.left - 18
-    : canvasRect.width;
-  const layoutWidth = Math.max(360, Math.round(Math.min(canvasRect.width, availableWidth)));
+  const layoutWidth = Math.max(360, Math.round(canvasRect.width));
   const layoutHeight = Math.max(360, Math.round(canvasRect.height));
   return {
     mode,

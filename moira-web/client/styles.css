@@ -324,8 +324,8 @@ button {
 
 .chart-view {
   position: relative;
-  --control-panel-width: clamp(382px, 23.4vw, 440px);
-  --control-panel-gap: 18px;
+  --control-panel-width: clamp(300px, 24vw, 324px);
+  --control-panel-gap: 12px;
 }
 
 .chart-view.active {
@@ -349,7 +349,7 @@ button {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding-right: calc(var(--control-panel-width) + var(--control-panel-gap) + 18px);
+  padding-right: 0;
   box-sizing: border-box;
 }
 
@@ -382,8 +382,8 @@ button {
 
 .control-panel {
   position: absolute;
-  top: 12px;
-  right: 18px;
+  top: 11px;
+  right: 14px;
   z-index: 3;
   width: var(--control-panel-width);
   min-height: 0;
@@ -396,9 +396,9 @@ button {
   position: relative;
   display: grid;
   align-content: start;
-  gap: 7px;
-  min-height: 238px;
-  padding: 7px;
+  gap: 6px;
+  min-height: 0;
+  padding: 7px 6px 8px;
   color: var(--control-text);
   background: var(--black-panel);
 }
@@ -432,7 +432,7 @@ button {
   position: relative;
   border: 1px solid var(--black-panel-line);
   border-radius: 4px;
-  padding: 6px;
+  padding: 5px;
   background: #050505;
 }
 
@@ -461,7 +461,7 @@ button {
 }
 
 .black-card h2 {
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .black-card summary {
@@ -475,10 +475,10 @@ button {
 
 .identity-card {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) 96px;
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 5px;
   align-items: start;
-  min-height: 70px;
+  min-height: 56px;
 }
 
 .identity-card > * {
@@ -487,7 +487,7 @@ button {
 
 .identity-card.black-card {
   border: 0;
-  padding: 19px 0 0;
+  padding: 17px 0 0;
   background: transparent;
 }
 
@@ -509,16 +509,16 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 5px;
   position: relative;
-  width: 96px;
+  width: 88px;
   min-width: 0;
-  height: 40px;
-  min-height: 40px;
+  height: 34px;
+  min-height: 34px;
   border: 1px solid var(--black-panel-line);
   border-radius: 4px;
   margin: 0;
-  padding: 17px 7px 4px;
+  padding: 15px 5px 3px;
   background: #050505;
-  transform: translateY(17px);
+  transform: translateY(13px);
 }
 
 .gender-field legend {
@@ -531,7 +531,7 @@ button {
 .option-row label {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   color: #f1f1f1;
 }
 
@@ -541,16 +541,16 @@ textarea {
   min-width: 0;
   border: 1px solid var(--control-border);
   border-radius: 2px;
-  padding: 3px 6px;
+  padding: 2px 5px;
   color: var(--control-text);
   background: var(--control);
   box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .identity-card input[name="name"] {
-  height: 34px;
+  height: 28px;
   background:
-    linear-gradient(#191919, #101010) 11px 10px / calc(100% - 22px) 20px no-repeat,
+    linear-gradient(#191919, #101010) 10px 8px / calc(100% - 20px) 17px no-repeat,
     #050505;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.03),
@@ -569,8 +569,8 @@ textarea {
 
 input[type="radio"],
 input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   box-shadow: none;
 }
 
@@ -581,8 +581,8 @@ input[type="checkbox"] {
 .gender-field input[type="radio"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   border: 1px solid #060606;
   border-radius: 50%;
   padding: 0;
@@ -600,34 +600,34 @@ input[type="checkbox"] {
 
 .place-grid {
   display: grid;
-  grid-template-columns: minmax(124px, 1fr) minmax(142px, 1fr);
-  gap: 5px;
-  width: calc(100% - 18px);
-  margin-left: 9px;
+  grid-template-columns: minmax(0, 1fr) minmax(106px, 1fr);
+  gap: 4px;
+  width: calc(100% - 14px);
+  margin-left: 7px;
   margin-bottom: 0;
 }
 
 .moira-date-row {
   display: grid;
-  grid-template-columns: 54px 42px 60px 42px 43px 54px 16px;
+  grid-template-columns: 46px 31px 50px 31px 34px 42px 16px;
   gap: 2px;
-  width: calc(100% - 18px);
-  margin-left: 9px;
-  margin-bottom: 5px;
+  width: 262px;
+  margin-left: 7px;
+  margin-bottom: 4px;
 }
 
 .moira-date-row[data-datetime="now"] {
-  grid-template-columns: 54px 32px 58px 32px 36px 42px 16px;
+  grid-template-columns: 46px 31px 50px 31px 34px 42px 16px;
   gap: 2px;
-  width: 278px;
+  width: 262px;
 }
 
 .moira-date-row input,
 .moira-date-row select {
-  height: 21px;
+  height: 20px;
   border-color: #2d2d2d;
   border-radius: 1px;
-  padding: 2px 4px;
+  padding: 2px 3px;
   background: linear-gradient(#191919, #0b0b0b);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.08),
@@ -635,18 +635,18 @@ input[type="checkbox"] {
 }
 
 .moira-date-row input {
-  padding-right: 16px;
+  padding-right: 11px;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%238c8c8c' d='M1 2h8L5 6z'/%3E%3C/svg%3E") calc(100% - 4px) center / 10px 8px no-repeat,
-    linear-gradient(#1b1b1b, #050505) right top / 14px 100% no-repeat,
+    linear-gradient(#1b1b1b, #050505) right top / 10px 100% no-repeat,
     linear-gradient(#191919, #0b0b0b) left top / 100% 100% no-repeat;
 }
 
 .moira-date-row select {
-  padding-right: 16px;
+  padding-right: 12px;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Cpath fill='%238c8c8c' d='M1 2h8L5 6z'/%3E%3C/svg%3E") calc(100% - 8px) center / 10px 8px no-repeat,
-    linear-gradient(#1b1b1b, #050505) right top / 14px 100% no-repeat,
+    linear-gradient(#1b1b1b, #050505) right top / 11px 100% no-repeat,
     linear-gradient(#191919, #0b0b0b) left top / 100% 100% no-repeat;
 }
 
@@ -661,10 +661,10 @@ input[type="checkbox"] {
 
 .black-card > select[name="country"] {
   display: block;
-  width: 357px;
-  height: 21px;
-  margin-left: 9px;
-  margin-bottom: 5px;
+  width: calc(100% - 14px);
+  height: 20px;
+  margin-left: 7px;
+  margin-bottom: 4px;
 }
 
 .black-card > select[name="country"],
@@ -678,8 +678,8 @@ input[type="checkbox"] {
 
 .spin-button {
   align-self: center;
-  width: 12px;
-  height: 18px;
+  width: 11px;
+  height: 17px;
   border: 1px solid #303030;
   border-radius: 2px;
   background:
@@ -689,8 +689,8 @@ input[type="checkbox"] {
 }
 
 .moira-date-row[data-datetime="birth"] .spin-button {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-color: #56320b;
   border-radius: 50%;
   background:
@@ -699,7 +699,7 @@ input[type="checkbox"] {
   box-shadow:
     inset 0 0 0 2px #3e2107,
     0 0 0 1px #000;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .mode-card {
