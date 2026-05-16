@@ -87,8 +87,16 @@ async function main() {
     await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(0).locator("summary").hover();
     const optionPanel = await rect(page, "details.menu:nth-of-type(4) > .menu-panel");
     const optionText = await page.locator("details.menu:nth-of-type(4) > .menu-panel").innerText();
+    const optionOverflow = await page.locator("details.menu:nth-of-type(4) > .menu-panel").evaluate((panel) => ({
+      clientHeight: panel.clientHeight,
+      scrollHeight: panel.scrollHeight,
+      bottom: Math.round(panel.getBoundingClientRect().bottom)
+    }));
     const submenu = await rect(page, "details.menu:nth-of-type(4) .menu-subpanel:visible");
     assert(optionPanel.width >= 248, `options panel too narrow: ${optionPanel.width}`);
+    assert(optionOverflow.bottom <= 800, `options panel should fit the desktop viewport, got ${JSON.stringify(optionOverflow)}`);
+    assert(optionOverflow.scrollHeight <= optionOverflow.clientHeight + 2,
+      `options panel should not require scrolling at desktop size, got ${JSON.stringify(optionOverflow)}`);
     [
       "選擇星盤(&M)...",
       "顯示流年(&N)",
@@ -107,7 +115,7 @@ async function main() {
     });
     assert(submenu.x >= optionPanel.right - 10, `submenu should open to the right, got ${JSON.stringify({ optionPanel, submenu })}`);
     assert(submenu.right <= 1280, `submenu clipped beyond viewport: ${submenu.right}`);
-    assert(submenu.width >= 188 && submenu.height >= 90, `submenu size looks wrong: ${JSON.stringify(submenu)}`);
+    assert(submenu.width >= 188 && submenu.height >= 64, `submenu size looks wrong: ${JSON.stringify(submenu)}`);
 
     await page.keyboard.press("Escape");
     await page.locator(".main-tabs .tab[data-view='manage']").click();

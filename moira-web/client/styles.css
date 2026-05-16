@@ -118,7 +118,7 @@ button {
   display: grid;
   min-width: 184px;
   max-height: calc(100vh - 38px);
-  padding: 5px;
+  padding: 2px;
   border: 1px solid #111;
   border-radius: 0 0 5px 5px;
   background: #2e2e2d;
@@ -129,7 +129,7 @@ button {
 
 .menu-panel hr {
   width: 100%;
-  margin: 3px 0;
+  margin: 1px 0;
   border: 0;
   border-top: 1px solid #555;
 }
@@ -140,9 +140,9 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 22px;
+  min-height: 16px;
   color: #f0f0f0;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -150,7 +150,7 @@ button {
   width: 100%;
   border: 0;
   border-radius: 3px;
-  padding: 3px 8px;
+  padding: 1px 6px;
   text-align: left;
   background: transparent;
 }
@@ -211,11 +211,11 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 22px;
-  padding: 3px 8px;
+  min-height: 16px;
+  padding: 1px 6px;
   border-radius: 3px;
   color: #f0f0f0;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   cursor: default;
   list-style: none;
