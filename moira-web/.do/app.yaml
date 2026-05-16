@@ -15,7 +15,7 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: wenkai-font-2
+    tag: classic-menu-font-1
     deploy_on_push:
       enabled: true
   http_port: 8080
@@ -34,9 +34,6 @@ services:
   - key: MOIRA_WEB_STATIC_CACHE
     scope: RUN_TIME
     value: "true"
-  - key: MOIRA_WEB_FONT_NAME
-    scope: RUN_TIME
-    value: LXGW WenKai Screen, STKaiti, Kaiti SC, Kaiti TC, Songti SC, Songti TC, Noto Sans CJK SC, Noto Sans CJK TC, AR PL UKai CN, AR PL UKai TW, SimSun, MingLiU
   - key: MOIRA_WEB_MAX_THREADS
     scope: RUN_TIME
     value: "12"

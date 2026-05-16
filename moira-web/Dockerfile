@@ -12,9 +12,6 @@ RUN apt-get update \
         fontconfig \
         fonts-arphic-ukai \
         fonts-noto-cjk \
-    && mkdir -p /usr/share/fonts/truetype/lxgw \
-    && curl -fsSL -o /usr/share/fonts/truetype/lxgw/LXGWWenKaiScreen.ttf \
-        https://github.com/lxgw/LxgwWenKai-Screen/releases/download/v1.522/LXGWWenKaiScreen.ttf \
     && fc-cache -f \
     && rm -rf /var/lib/apt/lists/*
 
@@ -35,7 +32,6 @@ ENV MOIRA_WEB_HOST=0.0.0.0
 ENV MOIRA_WEB_STATIC_DIR=/app/client
 ENV MOIRA_WEB_RESOURCE_DIR=/app/resources
 ENV MOIRA_WEB_STATIC_CACHE=true
-ENV MOIRA_WEB_FONT_NAME="LXGW WenKai Screen, STKaiti, Kaiti SC, Kaiti TC, Songti SC, Songti TC, Noto Sans CJK SC, Noto Sans CJK TC, AR PL UKai CN, AR PL UKai TW, SimSun, MingLiU"
 ENV LANG=C.UTF-8
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD curl --fail --silent "http://127.0.0.1:${PORT:-8080}/health" >/dev/null || exit 1

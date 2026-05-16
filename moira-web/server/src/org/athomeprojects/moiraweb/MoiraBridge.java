@@ -44,7 +44,7 @@ final class MoiraBridge {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("parityGoal", "The web version must preserve every desktop surface before replacing the desktop app.");
         data.put("desktopModes", Arrays.asList(
-                feature("eastern", "七政四余星盘", "charting", "implemented"),
+                feature("traditional", "七政四余星盘", "charting", "implemented"),
                 feature("pick", "天星择日", "date-selection", "implemented"),
                 feature("western", "占星盘", "charting", "implemented"),
                 feature("sidereal", "郑氏星案", "charting", "implemented")));

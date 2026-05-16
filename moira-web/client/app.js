@@ -13,6 +13,7 @@ const appWindow = document.querySelector(".app-window");
 const viewTitle = document.querySelector("#viewTitle");
 const rowCount = document.querySelector("#rowCount");
 const tabButtons = [...document.querySelectorAll(".main-tabs .tab")];
+const menuCommands = [...document.querySelectorAll(".menu-command")];
 const views = [...document.querySelectorAll("[data-view-panel]")];
 const manageView = document.querySelector("#manageView");
 const entryTable = document.querySelector("#entryTable");
@@ -657,6 +658,59 @@ chartFields()
 
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
+});
+
+function closeMenus() {
+  document.querySelectorAll(".menu[open]").forEach((menu) => {
+    menu.removeAttribute("open");
+  });
+}
+
+function runMenuAction(action) {
+  const actionMap = {
+    open: importMriButton,
+    append: importEntriesButton,
+    save: exportMriButton,
+    "save-as": exportEntriesButton,
+    new: saveEntryButton,
+    delete: deleteEntryButton,
+    update: updateEntryButton
+  };
+  if (actionMap[action]) {
+    actionMap[action].click();
+    return;
+  }
+  if (action === "focus-name") {
+    switchView("chart");
+    chartField("name")?.focus();
+    return;
+  }
+  if (action === "select-all") {
+    const node = activeTextNode();
+    if (node) {
+      selectNodeText(node);
+    }
+    return;
+  }
+  if (action === "copy") {
+    const node = activeTextNode();
+    if (node) {
+      selectNodeText(node);
+      navigator.clipboard?.writeText(node.textContent || "").catch(() => {});
+    }
+  }
+}
+
+menuCommands.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.viewTarget) {
+      switchView(button.dataset.viewTarget);
+    }
+    if (button.dataset.action) {
+      runMenuAction(button.dataset.action);
+    }
+    closeMenus();
+  });
 });
 
 textTabs.addEventListener("click", (event) => {

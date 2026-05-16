@@ -355,6 +355,7 @@ public final class MoiraWebServer {
             data.put(String.valueOf(fields[i]), fields[i + 1]);
         }
         System.out.println(Json.object(data));
+        System.out.flush();
     }
 
     private interface ExchangeHandler {

@@ -10,6 +10,11 @@ BODY_FILE="$ROOT_DIR/build/self-check-body.bin"
 
 "$ROOT_DIR/scripts/build-server.sh"
 
+if curl --fail --silent --max-time 1 "$BASE_URL/health" >/dev/null 2>&1; then
+  echo "Port $PORT_VALUE already has a Moira Web server. Stop it or choose another port." >&2
+  exit 2
+fi
+
 MOIRA_WEB_PORT="$PORT_VALUE" \
 MOIRA_WEB_HOST="127.0.0.1" \
 MOIRA_WEB_STATIC_DIR="$ROOT_DIR/client" \
@@ -40,6 +45,7 @@ if grep -q 'Exception\|StackOverflowError' "$LOG_FILE"; then
   exit 1
 fi
 "$ROOT_DIR/scripts/smoke-test.sh" "$BASE_URL"
+"$ROOT_DIR/../scripts/verify-deployment.sh" "$BASE_URL"
 curl --fail --silent "$BASE_URL/" | grep -q '七政四餘星盤 - Moira'
 curl --fail --silent "$BASE_URL/api/features" | grep -q '七政四余星盘'
 curl --fail --silent "$BASE_URL/api/runtime/options" | grep -q 'Asia/Shanghai'

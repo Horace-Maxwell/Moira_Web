@@ -4,40 +4,95 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-46">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-47">
 </head>
 <body>
   <div class="app-window">
-    <div class="optionbar" aria-label="Moira chart options">
-      <span class="optionbar-title">七政四餘星盤 - Moira</span>
-      <label>盤式
-        <select name="mode" form="chartForm">
-          <option value="traditional">七政四餘星盤</option>
-          <option value="pick">天星擇日</option>
-          <option value="western">占星盤</option>
-          <option value="sidereal">鄭氏星案</option>
-        </select>
-      </label>
-      <label>星盤
-        <select name="astroMode" form="chartForm">
-          <option value="natal">本命</option>
-          <option value="transit">行運</option>
-          <option value="comparison">比較盤</option>
-          <option value="solar-return">太陽返照</option>
-          <option value="lunar-return">太陰返照</option>
-          <option value="secondary-progression">次限</option>
-        </select>
-      </label>
-      <label class="option-check"><input name="showNow" form="chartForm" type="checkbox" checked> 流年</label>
-      <label class="option-check"><input name="showAspects" form="chartForm" type="checkbox"> 相位</label>
-      <label class="option-check"><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
-      <label>校正
-        <select name="timeAdjust" form="chartForm" aria-label="時間校正">
-          <option value="0">標準時間</option>
-          <option value="2" selected>真太陽時</option>
-        </select>
-      </label>
-    </div>
+    <nav class="menubar" aria-label="Moira menu bar">
+      <details class="menu">
+        <summary>Moira</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-view-target="chart">關於 Moira Web</button>
+          <button class="menu-command" type="button" data-view-target="calculation">服務狀態</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>档案 (F)</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-action="open">開啟</button>
+          <button class="menu-command" type="button" data-action="append">加入</button>
+          <button class="menu-command" type="button" data-action="save">存檔</button>
+          <button class="menu-command" type="button" data-action="save-as">另存新檔</button>
+          <hr>
+          <button class="menu-command" type="button" data-action="new">新增</button>
+          <button class="menu-command" type="button" data-action="delete">刪除</button>
+          <button class="menu-command" type="button" data-action="update">更新</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>编辑 (E)</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-action="copy">複製</button>
+          <button class="menu-command" type="button" data-action="select-all">全選</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>选项 (P)</summary>
+        <div class="menu-panel menu-options">
+          <label>盤式
+            <select name="mode" form="chartForm">
+              <option value="traditional">七政四餘星盤</option>
+              <option value="pick">天星擇日</option>
+              <option value="western">占星盤</option>
+              <option value="sidereal">鄭氏星案</option>
+            </select>
+          </label>
+          <label>星盤
+            <select name="astroMode" form="chartForm">
+              <option value="natal">本命</option>
+              <option value="transit">行運</option>
+              <option value="comparison">比較盤</option>
+              <option value="solar-return">太陽返照</option>
+              <option value="lunar-return">太陰返照</option>
+              <option value="secondary-progression">次限</option>
+            </select>
+          </label>
+          <label><input name="showNow" form="chartForm" type="checkbox" checked> 流年</label>
+          <label><input name="showAspects" form="chartForm" type="checkbox"> 相位</label>
+          <label><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
+          <label>校正
+            <select name="timeAdjust" form="chartForm" aria-label="時間校正">
+              <option value="0">標準時間</option>
+              <option value="2" selected>真太陽時</option>
+            </select>
+          </label>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>搜索 (S)</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-action="focus-name">名稱輸入</button>
+          <button class="menu-command" type="button" data-view-target="manage">資料管理</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>检视 (V)</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-view-target="chart">星盤</button>
+          <button class="menu-command" type="button" data-view-target="calculation">計算</button>
+          <button class="menu-command" type="button" data-view-target="eight">八字</button>
+          <button class="menu-command" type="button" data-view-target="notes">批注</button>
+          <button class="menu-command" type="button" data-view-target="manage">管理</button>
+        </div>
+      </details>
+      <details class="menu">
+        <summary>说明 (H)</summary>
+        <div class="menu-panel">
+          <button class="menu-command" type="button" data-view-target="calculation">計算說明</button>
+          <button class="menu-command" type="button" data-view-target="notes">批注說明</button>
+        </div>
+      </details>
+    </nav>
 
     <nav class="main-tabs" aria-label="Moira pages">
       <button class="tab active" type="button" data-view="chart">星盤</button>
@@ -205,6 +260,6 @@
     <ul id="guardrails"></ul>
   </div>
 
-  <script src="/app.js?v=app-ui-native-46"></script>
+  <script src="/app.js?v=app-ui-native-47"></script>
 </body>
 </html>

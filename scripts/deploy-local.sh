@@ -26,6 +26,7 @@ echo "Waiting for Moira Web at ${BASE_URL} ..."
 for _ in $(seq 1 60); do
   if curl --fail --silent "${BASE_URL}/health" >/dev/null \
       && curl --fail --silent "${BASE_URL}/ready" >/dev/null; then
+    "$ROOT_DIR/scripts/verify-deployment.sh" "$BASE_URL"
     echo "Moira Web is ready: ${BASE_URL}"
     exit 0
   fi

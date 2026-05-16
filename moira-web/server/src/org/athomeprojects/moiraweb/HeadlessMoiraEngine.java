@@ -35,11 +35,6 @@ final class HeadlessMoiraEngine {
     private static final int DEFAULT_HEIGHT = 760;
     private static final int MIN_IMAGE_SIZE = 360;
     private static final int MAX_IMAGE_SIZE = 5000;
-    private static final String DEFAULT_FONT_NAME =
-            "LXGW WenKai Screen, STKaiti, Kaiti SC, Kaiti TC, "
-                    + "Songti SC, Songti TC, Noto Sans CJK SC, "
-                    + "Noto Sans CJK TC, AR PL UKai CN, AR PL UKai TW, "
-                    + "SimSun, MingLiU";
 
     private final Path resourceRoot;
 
@@ -136,7 +131,7 @@ final class HeadlessMoiraEngine {
     private String preferredFontName() {
         String configured = System.getenv("MOIRA_WEB_FONT_NAME");
         if (configured == null || configured.trim().isEmpty()) {
-            return DEFAULT_FONT_NAME;
+            return null;
         }
         return configured;
     }
