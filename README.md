@@ -25,7 +25,7 @@ The App Platform spec is stored at `moira-web/.do/app.yaml`. The live deployment
 
 The current spec uses `apps-d-4vcpu-8gb` with one instance for short high-capacity checks. Scale it down or destroy the app when temporary testing is finished.
 
-Build and push a new image:
+Build and push a new image. The runtime image includes CJK fonts because chart PNGs are rendered server-side by Java:
 
 ```bash
 docker build --platform linux/amd64 -f moira-web/Dockerfile \

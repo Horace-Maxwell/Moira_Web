@@ -15,7 +15,7 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: 405a18b
+    tag: cjk-fonts-1
     deploy_on_push:
       enabled: true
   http_port: 8080

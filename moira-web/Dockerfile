@@ -6,6 +6,11 @@ RUN ./moira-web/scripts/build-server.sh
 
 FROM eclipse-temurin:11-jre-jammy
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fontconfig fonts-noto-cjk \
+    && fc-cache -f \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=build /workspace/moira-web/build/moira-web.jar /app/moira-web.jar
 COPY --from=build /workspace/moira-web/client /app/client
@@ -23,6 +28,7 @@ ENV MOIRA_WEB_HOST=0.0.0.0
 ENV MOIRA_WEB_STATIC_DIR=/app/client
 ENV MOIRA_WEB_RESOURCE_DIR=/app/resources
 ENV MOIRA_WEB_STATIC_CACHE=true
+ENV LANG=C.UTF-8
 EXPOSE 8080
 
 CMD ["sh", "-c", "java ${JAVA_OPTS:--Djava.awt.headless=true -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError} -jar /app/moira-web.jar --host=${MOIRA_WEB_HOST:-0.0.0.0} --port=${PORT:-8080} --static-dir=${MOIRA_WEB_STATIC_DIR:-/app/client} --resource-dir=${MOIRA_WEB_RESOURCE_DIR:-/app/resources}"]
