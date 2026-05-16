@@ -15,6 +15,7 @@ HTML_FILE="$TMP_DIR/index.html"
 VERSION_FILE="$TMP_DIR/version.json"
 FEATURES_FILE="$TMP_DIR/features.json"
 HEADERS_FILE="$TMP_DIR/static.headers"
+CSS_FILE="$TMP_DIR/styles.css"
 
 curl --fail --silent "$BASE_URL/" > "$HTML_FILE"
 grep -q '七政四餘星盤 - Moira' "$HTML_FILE"
@@ -41,6 +42,12 @@ if grep -q 'class="titlebar"' "$HTML_FILE"; then
   echo "Unexpected legacy fake titlebar found in HTML." >&2
   exit 1
 fi
+
+curl --fail --silent "$BASE_URL/styles.css" > "$CSS_FILE"
+grep -q -- '--control-panel-width: clamp(300px, 24vw, 324px);' "$CSS_FILE"
+grep -q 'padding-right: 0;' "$CSS_FILE"
+grep -q 'object-position: left top;' "$CSS_FILE"
+grep -q 'grid-template-columns: minmax(0, 1fr) 88px;' "$CSS_FILE"
 
 curl --fail --silent "$BASE_URL/api/version" > "$VERSION_FILE"
 ruby -rjson -e '
@@ -89,5 +96,6 @@ curl --fail --silent \
   "$BASE_URL/styles.css"
 grep -qi '^Content-encoding: gzip' "$HEADERS_FILE"
 grep -qi '^Etag:' "$HEADERS_FILE"
+grep -qi '^Cache-control: public' "$HEADERS_FILE"
 
 echo "Deployment verified: $BASE_URL"

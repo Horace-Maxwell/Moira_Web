@@ -7,6 +7,8 @@ BASE_URL="http://127.0.0.1:$PORT_VALUE"
 LOG_FILE="$ROOT_DIR/build/self-check-server.log"
 HEADER_FILE="$ROOT_DIR/build/self-check-headers.txt"
 BODY_FILE="$ROOT_DIR/build/self-check-body.bin"
+CHART_FILE="$ROOT_DIR/build/self-check-chart.json"
+IMPORT_FILE="$ROOT_DIR/build/self-check-import.json"
 
 "$ROOT_DIR/scripts/build-server.sh"
 
@@ -60,12 +62,14 @@ MRI_B64="$(PACKED_ENTRY_B64="$PACKED_ENTRY_B64" ruby -rjson -e 'print JSON.gener
   | ruby -rjson -e 'print JSON.parse(STDIN.read)["mriBase64"]')"
 MRI_B64="$MRI_B64" ruby -rjson -e 'print JSON.generate({mriBase64: ENV.fetch("MRI_B64")})' \
   | curl --fail --silent --header 'Content-Type: application/json' --data @- "$BASE_URL/api/datasets/import" \
-  | grep -q '"status":"imported"'
+  > "$IMPORT_FILE"
+grep -q '"status":"imported"' "$IMPORT_FILE"
 for mode in traditional pick western sidereal; do
   curl --fail --silent \
     --header 'Content-Type: application/json' \
     --data "{\"mode\":\"$mode\",\"name\":\"DHX\",\"sex\":\"male\",\"birthDate\":\"2006-04-10\",\"birthTime\":\"09:58\",\"nowDate\":\"2026-04-09\",\"nowTime\":\"12:30\",\"country\":\"中国\",\"city\":\"上海\",\"zone\":\"Asia/Shanghai\",\"imageWidth\":\"720\",\"imageHeight\":\"540\"}" \
-    "$BASE_URL/api/chart/compute" | grep -q 'chartPngBase64'
+    "$BASE_URL/api/chart/compute" > "$CHART_FILE"
+  grep -q 'chartPngBase64' "$CHART_FILE"
 done
 
 curl --fail --silent \
