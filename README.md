@@ -35,6 +35,16 @@ By default this builds the web image locally, starts it on port `8080`, waits fo
 MOIRA_WEB_PORT=18080 ./scripts/deploy-local.sh
 ```
 
+If the server is behind a reverse proxy or public domain, keep the container check local but verify the public URL:
+
+```bash
+MOIRA_WEB_PORT=18080 \
+MOIRA_WEB_VERIFY_URL=https://your-domain.example \
+./scripts/deploy-local.sh
+```
+
+The script checks Docker, Docker Compose, curl, `/health`, `/ready`, the desktop-style menu shell, chart rendering, static gzip, ETag, cache headers, and the compact Mac-like chart overlay layout.
+
 To verify an already running deployment:
 
 ```bash

@@ -88,9 +88,14 @@ export MOIRA_WEB_CORS_ORIGIN=http://localhost:8080
 export MOIRA_WEB_STATIC_CACHE=true
 export MOIRA_WEB_MAX_THREADS=8
 export MOIRA_WEB_MAX_BODY_BYTES=2097152
+export MOIRA_WEB_VERIFY_URL=http://127.0.0.1:8080
+export MOIRA_WEB_WAIT_SECONDS=120
+export MOIRA_WEB_POLL_SECONDS=2
 ```
 
 DigitalOcean App Platform injects `PORT`; the server reads it automatically when `MOIRA_WEB_PORT` is not set.
+
+For a Docker Compose deployment from the repository root, `./scripts/deploy-local.sh` builds the image, starts the service, waits for the local health endpoints, and then verifies `MOIRA_WEB_VERIFY_URL`. Set that URL to your public reverse-proxy domain when the app is not reached directly through `127.0.0.1`.
 
 ## Production Run
 
