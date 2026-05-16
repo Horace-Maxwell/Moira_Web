@@ -1,0 +1,78 @@
+name: Web Release
+
+on:
+  push:
+    tags:
+      - "web-v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Verify and publish web image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run production self-check
+        run: ./moira-web/scripts/self-check.sh 18181
+
+      - name: Build release jar
+        run: ./moira-web/scripts/build-server.sh
+
+      - name: Compute release metadata
+        id: meta
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#web-v}"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          mkdir -p dist
+          cp moira-web/build/moira-web.jar "dist/moira-web-${version}.jar"
+          git archive --format=tar.gz --output "dist/moira-web-${version}-source.tar.gz" HEAD
+          {
+            echo "version=${version}"
+            echo "image=${image}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push linux/amd64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: moira-web/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ github.ref_name }}
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image }}:latest
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Moira Web ${{ steps.meta.outputs.version }}
+          generate_release_notes: true
+          files: |
+            dist/moira-web-${{ steps.meta.outputs.version }}.jar
+            dist/moira-web-${{ steps.meta.outputs.version }}-source.tar.gz

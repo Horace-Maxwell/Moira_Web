@@ -51,4 +51,4 @@
 - [x] Make the DigitalOcean helper optionally build and push a `linux/amd64` image before deployment.
 - [ ] Put the service behind HTTPS through the production domain.
 - [ ] Add backup strategy if server-side user storage is introduced.
-- [ ] Add release workflow for web builds.
+- [x] Add release workflow for web builds.

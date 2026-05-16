@@ -151,6 +151,20 @@ The root-level deployment verifier is safe to run against any server:
 
 It checks the desktop-style menu labels, Linux Chinese font availability, health endpoints, runtime options, chart PNG output, text pages, gzip, ETag, and cache headers.
 
+## Release Workflow
+
+The repository includes GitHub Actions for web CI and tagged releases:
+
+- `.github/workflows/web-ci.yml` runs script validation, production self-check, golden text fixtures, and a `linux/amd64` Docker build on `main` and pull requests.
+- `.github/workflows/web-release.yml` runs the same production gate for tags matching `web-v*`, publishes a GHCR image, and uploads a jar plus source archive to the GitHub Release.
+
+Use a tag like this when a web build is ready to ship:
+
+```bash
+git tag web-v1.0.0
+git push origin web-v1.0.0
+```
+
 ## Migration Strategy
 
 1. Keep the desktop release path working.

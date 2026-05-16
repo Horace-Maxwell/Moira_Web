@@ -98,3 +98,16 @@ Before considering a deployment healthy, run one of these:
 
 The checks cover the main HTML shell, original-style menu labels, runtime font availability, `/health`, `/ready`, `/api/version`, `/api/runtime/options`, `/api/features`, all four chart modes, text output, gzip, ETag, and static cache headers.
 The local self-check additionally compares all four modes against committed golden text fixtures captured from the legacy calculation bridge.
+
+## Web Release Workflow
+
+GitHub Actions runs the same production gate on `main` and pull requests. It also builds a `linux/amd64` Docker image so release regressions are caught before someone deploys from another server.
+
+To publish a web release, push a tag named `web-vX.Y.Z`:
+
+```bash
+git tag web-v1.0.0
+git push origin web-v1.0.0
+```
+
+The release workflow verifies the app, publishes a GHCR image, and attaches the built jar plus a source archive to the GitHub Release. DigitalOcean deployments can still use DOCR through `./moira-web/scripts/deploy-digitalocean.sh`; GHCR is a portable release artifact for non-DigitalOcean servers.

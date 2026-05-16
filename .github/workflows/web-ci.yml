@@ -1,0 +1,60 @@
+name: Web CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  self-check:
+    name: Build, self-check, and Docker smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate scripts
+        run: |
+          bash -n \
+            moira-web/scripts/build-server.sh \
+            moira-web/scripts/deploy-digitalocean.sh \
+            moira-web/scripts/run-dev.sh \
+            moira-web/scripts/self-check.sh \
+            moira-web/scripts/smoke-test.sh \
+            moira-web/scripts/start-production.sh \
+            scripts/deploy-local.sh \
+            scripts/verify-deployment.sh
+          ruby -c moira-web/scripts/golden-text-check.rb
+
+      - name: Run production self-check
+        run: ./moira-web/scripts/self-check.sh 18180
+
+      - name: Build linux/amd64 runtime image
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            -f moira-web/Dockerfile \
+            -t moira-web:ci \
+            --load \
+            .
+
+      - name: Inspect runtime image
+        run: |
+          docker image inspect moira-web:ci >/dev/null
+          docker run --rm --platform linux/amd64 --entrypoint sh moira-web:ci -c \
+            'test -f /app/moira-web.jar && test -f /app/resources/moira_s.prop && fc-match "AR PL UKai TW"'
