@@ -729,9 +729,13 @@ function formPayload() {
   const formData = chartValues();
   const mode = formData.mode || "traditional";
   const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
+  const controlRect = document.querySelector(".control-panel")?.getBoundingClientRect();
   const pixelRatio = window.devicePixelRatio || 1;
   const layoutWidth = Math.max(360, Math.round(canvasRect.width));
   const layoutHeight = Math.max(360, Math.round(canvasRect.height));
+  const reservedWidth = controlRect
+    ? Math.min(Math.max(0, Math.round(controlRect.width + 34)), Math.max(0, layoutWidth - 480))
+    : 0;
   const autoWidth = Math.max(360, Math.round(layoutWidth * pixelRatio));
   const autoHeight = Math.max(360, Math.round(layoutHeight * pixelRatio));
   const requestedWidth = boundedNumber(settings.chartWidth, 0, 0, 5000);
@@ -759,7 +763,7 @@ function formPayload() {
     singleWheel: formData.singleWheel === "on" ? "true" : "false",
     showMansions: formData.showMansions === "on" ? "true" : "false",
     showAnnotations: formData.showAnnotations === "on" ? "true" : "false",
-    daySet: formData.daySet === "on" ? "true" : "false",
+    daySet: formData.daySet === "off" ? "false" : "true",
     timeAdjust: formData.timeAdjust || "2",
     mountainPos: formData.mountainPos || "0.0",
     note: formData.note || "",
@@ -767,7 +771,7 @@ function formPayload() {
     imageHeight: String(Math.max(360, Math.round(outputHeight))),
     layoutWidth: String(layoutWidth),
     layoutHeight: String(layoutHeight),
-    reservedWidth: "0",
+    reservedWidth: String(reservedWidth),
     imageZoom: String(Math.max(100, Math.round(pixelRatio * 100)))
   };
 }

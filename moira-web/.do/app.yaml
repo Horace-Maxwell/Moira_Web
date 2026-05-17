@@ -15,9 +15,9 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: hidpi-chart-v1
+    tag: mac-layout-v1
     deploy_on_push:
-      enabled: true
+      enabled: false
   http_port: 8080
   instance_count: 1
   instance_size_slug: apps-d-4vcpu-8gb

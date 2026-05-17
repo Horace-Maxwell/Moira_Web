@@ -374,7 +374,7 @@ button {
 
 .chart-view {
   position: relative;
-  --control-panel-width: clamp(300px, 24vw, 324px);
+  --control-panel-width: clamp(300px, 24vw, 500px);
   --control-panel-gap: 12px;
 }
 

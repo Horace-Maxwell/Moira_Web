@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-61">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-62">
 </head>
 <body>
   <div class="app-window">
@@ -82,14 +82,10 @@
             </div>
           </details>
           <hr>
-          <label class="menu-check-row"><input name="showNow" form="chartForm" type="checkbox" checked> 顯示流年(&N) <span>Ctrl+R</span></label>
-          <label class="menu-check-row"><input name="showMansions" form="chartForm" type="checkbox"> 顯示三垣列宿</label>
-          <label class="menu-check-row"><input name="showFixstar" form="chartForm" type="checkbox"> 顯示開禧宿度(&N)</label>
-          <label class="menu-check-row"><input name="showGauquelin" form="chartForm" type="checkbox"> 顯示高格林(&N)</label>
-          <label class="menu-check-row"><input name="singleWheel" form="chartForm" type="checkbox"> 顯示單圈(&N)</label>
-          <label class="menu-check-row"><input name="showHoriz" form="chartForm" type="checkbox"> 顯示地平方位 <span>Ctrl+P</span></label>
-          <label class="menu-check-row"><input name="showAspects" form="chartForm" type="checkbox"> 顯示相位(&A) <span>Ctrl+L</span></label>
-          <label class="menu-check-row"><input name="showAnnotations" form="chartForm" type="checkbox"> 顯示神煞註釋(&E) <span>Ctrl+E</span></label>
+          <label class="menu-check-row"><input name="showNow" form="chartForm" type="checkbox" checked> 顯示流年(&N) <span>⌃R</span></label>
+          <label class="menu-check-row"><input name="showHoriz" form="chartForm" type="checkbox"> 顯示地平方位 <span>⌃P</span></label>
+          <label class="menu-check-row"><input name="showAspects" form="chartForm" type="checkbox"> 顯示相位(&A) <span>⌃L</span></label>
+          <label class="menu-check-row"><input name="showAnnotations" form="chartForm" type="checkbox"> 顯示神煞註釋(&E) <span>⌃E</span></label>
           <hr>
           <details class="menu-cascade">
             <summary>修正時間(&T)...</summary>
@@ -99,7 +95,6 @@
             </div>
           </details>
           <button class="menu-command" type="button" data-action="life-body-settings">立命安身(&X)...</button>
-          <button class="menu-command" type="button" data-action="pick-settings">選擇擇日計算&H)...</button>
           <hr>
           <details class="menu-cascade">
             <summary>項目顯示</summary>
@@ -122,35 +117,18 @@
           <hr>
           <button class="menu-command" type="button" data-action="planet-settings">選擇星曜(&I)...</button>
           <button class="menu-command" type="button" data-action="angle-settings">選擇角距顯示(&O)...</button>
-          <button class="menu-command" type="button" data-action="aspect-settings">選擇相位(&K)...</button>
-          <button class="menu-command" type="button" data-action="strength-settings">選擇星曜及強勢角距(&J)...</button>
-          <button class="menu-command" type="button" data-action="house-settings">選擇分宮制(&H)...</button>
-          <button class="menu-command" type="button" data-action="zodiac-settings">選擇回歸恆星制(&S)...</button>
-          <button class="menu-command" type="button" data-action="synastry-settings">選擇合盤計算(&U)...</button>
           <button class="menu-command" type="button" data-action="spirit-settings">選擇神煞(&S)...</button>
           <button class="menu-command" type="button" data-action="pattern-settings">選擇政餘格局(&Z)...</button>
-          <hr>
-          <details class="menu-cascade">
-            <summary>占星模式</summary>
-            <div class="menu-panel menu-subpanel">
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="natal" data-check-group="astroMode">本命</button>
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="transit" data-check-group="astroMode">行運</button>
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="comparison" data-check-group="astroMode">比較盤</button>
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="solar-return" data-check-group="astroMode">太陽返照</button>
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="lunar-return" data-check-group="astroMode">太陰返照</button>
-              <button class="menu-command" type="button" data-set-control="astroMode" data-set-value="secondary-progression" data-check-group="astroMode">次限</button>
-            </div>
-          </details>
-          <label class="menu-check-row"><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
           <hr>
           <button class="menu-command" type="button" data-action="font-direction">字形方向設定(&V)...</button>
           <button class="menu-command" type="button" data-action="font-settings">字形設定(&F)...</button>
           <hr>
           <button class="menu-command" type="button" data-action="color-settings">色彩設定(&C)...</button>
           <label class="menu-check-row"><input type="checkbox" data-pref="monochrome"> 黑白色(&B)</label>
+          <hr>
           <label class="menu-check-row"><input type="checkbox" data-pref="minimizeToTray"> 縮小在系統匣(&Q)</label>
           <hr>
-          <button class="menu-command" type="button" data-action="toggle-language">简体中文 (須重新啟動)(&L)</button>
+          <button class="menu-command" type="button" data-action="toggle-language">繁体中文 (須重新啟動)(&L)</button>
           <hr>
           <button class="menu-command" type="button" data-action="reset-options">選項還原 (須重新啟動)(&R)</button>
         </div>
@@ -384,6 +362,6 @@
     </form>
   </dialog>
 
-  <script src="/app.js?v=app-ui-native-61"></script>
+  <script src="/app.js?v=app-ui-native-62"></script>
 </body>
 </html>
