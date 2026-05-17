@@ -141,6 +141,10 @@ public class ChartMode {
 		String[] chart_names = Resource
 				.getStringArray(show_gauquelin ? "gauquelin_mode_name"
 						: "astro_mode_name");
+		if (astro_mode >= chart_names.length)
+			chart_names = Resource.getStringArray("astro_mode_name");
+		if (astro_mode >= chart_names.length)
+			return "";
 		return chart_names[astro_mode];
 	}
 

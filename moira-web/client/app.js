@@ -44,6 +44,7 @@ let selectedEntryId = entries[0]?.id || null;
 let entriesDirty = false;
 let pendingTextImport = null;
 let lastChartLayout = null;
+let lastEditableElement = null;
 let computeRequestId = 0;
 let settings;
 const monthNames = [
@@ -188,6 +189,7 @@ function applySettings() {
   document.body.classList.toggle("high-resolution-ui", Boolean(settings.highResolutionUi));
   document.body.classList.toggle("simplified-labels", Boolean(settings.simplifiedLabels));
   document.body.classList.toggle("minimize-to-tray", Boolean(settings.minimizeToTray));
+  document.documentElement.lang = settings.simplifiedLabels ? "zh-CN" : "zh-Hant";
   document.body.style.fontFamily = `"${settings.interfaceFont || defaultSettings.interfaceFont}", "Helvetica Neue", Arial, sans-serif`;
   document.querySelectorAll("[data-pref]").forEach((input) => {
     input.checked = Boolean(settings[input.dataset.pref]);
@@ -520,10 +522,18 @@ function selectNodeText(node) {
   selection.addRange(range);
 }
 
+function isEditableElement(element) {
+  return element?.matches?.("input, textarea, [contenteditable='plaintext-only'], [contenteditable='true']");
+}
+
 function selectedEditableElement() {
   const active = document.activeElement;
-  if (active?.matches?.("input, textarea, [contenteditable='plaintext-only'], [contenteditable='true']")) {
+  if (isEditableElement(active)) {
+    lastEditableElement = active;
     return active;
+  }
+  if (lastEditableElement?.isConnected && isEditableElement(lastEditableElement)) {
+    return lastEditableElement;
   }
   return activeTextNode();
 }
@@ -1307,6 +1317,7 @@ function formPayload() {
     pickHouseSystemIndex: String(settings.pickHouseSystemIndex),
     astroSystemMode: settings.astroSystemMode ? "true" : "false",
     astroSiderealIndex: String(settings.astroSiderealIndex),
+    zodiacMode: settings.zodiacMode,
     lifeMode: String(settings.lifeMode),
     selfMode: String(settings.selfMode),
     pickSiderealMode: settings.pickSiderealMode ? "true" : "false",
@@ -1707,6 +1718,11 @@ form.addEventListener("submit", async (event) => {
 
 form.addEventListener("change", scheduleCompute);
 form.addEventListener("input", scheduleCompute);
+document.addEventListener("focusin", (event) => {
+  if (isEditableElement(event.target)) {
+    lastEditableElement = event.target;
+  }
+});
 chartFields()
   .filter((control) => !form.contains(control))
   .forEach((control) => {
@@ -1866,8 +1882,19 @@ function runMenuAction(action) {
     return;
   }
   if (action === "copy") {
-    const node = activeTextNode();
-    if (node) {
+    const editable = selectedEditableElement();
+    if (editable?.matches?.("input, textarea")) {
+      const start = editable.selectionStart ?? 0;
+      const end = editable.selectionEnd ?? editable.value.length;
+      const text = start === end ? editable.value : editable.value.slice(start, end);
+      clipboardWrite(text).catch(() => {});
+    } else if (editable?.isContentEditable) {
+      document.execCommand("copy");
+    } else {
+      const node = activeTextNode();
+      if (!node) {
+        return;
+      }
       selectNodeText(node);
       navigator.clipboard?.writeText(node.textContent || "").catch(() => {});
     }
@@ -2166,7 +2193,9 @@ function makeEntryFromPayload(payload, id = entryId()) {
 
 exportEntriesButton.addEventListener("click", () => {
   manageView.classList.add("show-import");
-  entryImport.value = JSON.stringify(entries, null, 2);
+  const json = JSON.stringify(entries, null, 2);
+  entryImport.value = json;
+  downloadText(json, "moira-web-entries.json", "application/json;charset=utf-8");
 });
 
 importEntriesButton.addEventListener("click", () => {
@@ -2385,6 +2414,18 @@ function downloadBase64(value, fileName) {
   const blob = new Blob([base64ToBytes(value)], {
     type: "application/octet-stream"
   });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadText(value, fileName, type = "text/plain;charset=utf-8") {
+  const blob = new Blob([value], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

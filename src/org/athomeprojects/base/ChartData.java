@@ -2984,7 +2984,9 @@ public class ChartData {
                     format += "ffh.fff" + getStringFormat(str1, false) + "f"
                             + getStringFormat(str2, false) + "f";
                 } else {
-                    str += getShortDate(now_date, true) + "  " + age_label;
+                    Date desc_date = (now_date != null) ? now_date
+                            : getDate(birth_adj_date);
+                    str += getShortDate(desc_date, true) + "  " + age_label;
                     format += "h.";
                 }
                 if (now_start_degree >= 0.0 && now_end_degree >= 0.0) {
