@@ -79,7 +79,7 @@ async function main() {
       hidden: img.hidden,
       clientWidth: Math.round(img.getBoundingClientRect().width),
       clientHeight: Math.round(img.getBoundingClientRect().height),
-      devicePixelRatio: window.devicePixelRatio || 1,
+      devicePixelRatio: Math.max(1, window.devicePixelRatio || 1),
       objectPosition: getComputedStyle(img).objectPosition
     }));
     assert(!imageProbe.hidden, "chart image is hidden");

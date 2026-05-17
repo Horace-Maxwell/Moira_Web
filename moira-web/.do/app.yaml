@@ -15,7 +15,7 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: mac-layout-v1
+    tag: sharp-render-v1
     deploy_on_push:
       enabled: false
   http_port: 8080

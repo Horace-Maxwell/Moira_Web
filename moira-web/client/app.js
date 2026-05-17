@@ -730,7 +730,7 @@ function formPayload() {
   const mode = formData.mode || "traditional";
   const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
   const controlRect = document.querySelector(".control-panel")?.getBoundingClientRect();
-  const pixelRatio = window.devicePixelRatio || 1;
+  const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
   const layoutWidth = Math.max(360, Math.round(canvasRect.width));
   const layoutHeight = Math.max(360, Math.round(canvasRect.height));
   const reservedWidth = controlRect
