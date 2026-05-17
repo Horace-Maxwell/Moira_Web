@@ -54,7 +54,7 @@ grep -q '流年星法(&T)...' "$HTML_FILE"
 grep -q '現在時間(&N)' "$HTML_FILE"
 grep -q '操作說明(&O)' "$HTML_FILE"
 grep -q 'name="mode" type="hidden"' "$HTML_FILE"
-grep -q 'app-ui-native-66' "$HTML_FILE"
+grep -q 'app-ui-native-71' "$HTML_FILE"
 if grep -q 'class="titlebar"' "$HTML_FILE"; then
   echo "Unexpected legacy fake titlebar found in HTML." >&2
   exit 1

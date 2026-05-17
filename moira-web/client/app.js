@@ -17,6 +17,7 @@ const menus = [...document.querySelectorAll(".menu")];
 const menuCascades = [...document.querySelectorAll(".menu-cascade")];
 const menuCommands = [...document.querySelectorAll(".menu-command")];
 const views = [...document.querySelectorAll("[data-view-panel]")];
+const workspace = document.querySelector(".workspace");
 const manageView = document.querySelector("#manageView");
 const entryTable = document.querySelector("#entryTable");
 const entryImport = document.querySelector("#entryImport");
@@ -42,6 +43,7 @@ let autoComputeTimer = null;
 let selectedEntryId = entries[0]?.id || null;
 let entriesDirty = false;
 let pendingTextImport = null;
+let lastChartLayout = null;
 let settings;
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -66,6 +68,10 @@ const defaultSettings = {
   toolbarEdit: true,
   toolbarOptions: true,
   toolbarSearch: true,
+  showTabCalculation: true,
+  showTabEight: true,
+  showTabNotes: true,
+  showTabManage: true,
   monochrome: false,
   minimizeToTray: false,
   highResolutionUi: false,
@@ -155,6 +161,11 @@ function applySettings() {
   document.querySelectorAll("[data-pref]").forEach((input) => {
     input.checked = Boolean(settings[input.dataset.pref]);
   });
+  document.querySelectorAll("[data-tab-panel]").forEach((input) => {
+    const key = tabPanelSettingKey(input.dataset.tabPanel);
+    input.checked = settings[key] !== false;
+  });
+  applyTabVisibility();
   if (settings.themeColor) {
     document.documentElement.style.setProperty("--chrome", settings.themeColor);
   }
@@ -164,6 +175,38 @@ function updateSetting(name, value) {
   settings = { ...settings, [name]: value };
   saveSettings();
   applySettings();
+}
+
+function tabPanelSettingKey(view) {
+  return {
+    calculation: "showTabCalculation",
+    eight: "showTabEight",
+    notes: "showTabNotes",
+    manage: "showTabManage"
+  }[view] || "";
+}
+
+function isViewEnabled(view) {
+  if (view === "chart") {
+    return true;
+  }
+  const key = tabPanelSettingKey(view);
+  return !key || settings[key] !== false;
+}
+
+function applyTabVisibility() {
+  tabButtons.forEach((button) => {
+    const visible = isViewEnabled(button.dataset.view);
+    button.hidden = !visible;
+    button.setAttribute("aria-hidden", visible ? "false" : "true");
+  });
+  views.forEach((panel) => {
+    const visible = isViewEnabled(panel.dataset.viewPanel);
+    panel.hidden = !visible;
+  });
+  if (!isViewEnabled(appWindow.dataset.currentView)) {
+    switchView("chart");
+  }
 }
 
 function showResult(payload) {
@@ -276,6 +319,12 @@ function initializeCurrentDateTimes() {
   form.elements.nowTime.value = time;
 }
 
+function setNowDateTimeToCurrent() {
+  const now = new Date();
+  form.elements.nowDate.value = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  form.elements.nowTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+}
+
 function updateAllDateTimeWidgets() {
   updateDateTimeWidget("birth");
   updateDateTimeWidget("now");
@@ -321,7 +370,7 @@ function wireDateTimeWidgets() {
 }
 
 function switchView(view) {
-  const nextView = viewTitles[view] ? view : "chart";
+  const nextView = viewTitles[view] && isViewEnabled(view) ? view : "chart";
   window.getSelection()?.removeAllRanges();
   appWindow.dataset.currentView = nextView;
   viewTitle.textContent = viewTitles[nextView];
@@ -331,6 +380,26 @@ function switchView(view) {
   views.forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.viewPanel === nextView);
   });
+  if (nextView === "chart") {
+    requestAnimationFrame(() => {
+      lastChartLayout = null;
+      chartLayoutMetrics();
+      ensureChartResolution();
+    });
+  }
+}
+
+function ensureChartResolution() {
+  if (!chartImage || chartImage.hidden || !chartImage.complete) {
+    return;
+  }
+  const layout = chartLayoutMetrics();
+  const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
+  const minWidth = Math.round(layout.width * pixelRatio * 0.85);
+  const minHeight = Math.round(layout.height * pixelRatio * 0.85);
+  if (chartImage.naturalWidth < minWidth || chartImage.naturalHeight < minHeight) {
+    scheduleCompute();
+  }
 }
 
 function showTextPage(page) {
@@ -857,6 +926,13 @@ function openSearchDialog(action) {
     "search-lunar-eclipse": "月蝕時間",
     "search-aspect": "相位"
   }[action] || "搜索";
+  const astroModeByAction = {
+    "search-transit": "transit",
+    "search-primary": "primary-direction",
+    "search-secondary": "secondary-progression",
+    "search-solar-arc": "solar-arc",
+    "search-aspect": "transit"
+  };
   const container = document.createElement("div");
   const start = textInput(chartField("nowDate")?.value || chartField("birthDate")?.value || "2026-01-01", "date");
   const years = numberInput(1, 1, 120);
@@ -865,7 +941,9 @@ function openSearchDialog(action) {
     dialogField("搜尋年數", years),
     Object.assign(document.createElement("p"), {
       className: "dialog-note",
-      textContent: "目前會把搜尋條件保存並切到計算頁顯示當前盤資料；專門事件列表會隨 legacy 搜尋算法逐項接入。"
+      textContent: astroModeByAction[action]
+        ? "按 OK 後會切換到對應的占星推運盤，並用起始日期作為流年/推運時間重新繪盤。"
+        : "按 OK 後會保存搜尋條件，切到對應文字頁並重新計算目前資料。"
     })
   );
   openBasicDialog(title, container, () => {
@@ -873,7 +951,17 @@ function openSearchDialog(action) {
     settings.searchStart = start.value;
     settings.searchYears = boundedNumber(years.value, 1, 1, 120);
     saveSettings();
-    switchView("calculation");
+    setChartValue("nowDate", start.value);
+    if (astroModeByAction[action]) {
+      setChartValue("mode", "western");
+      setChartValue("astroMode", astroModeByAction[action]);
+      syncMenuCheckmarks();
+      switchView("chart");
+    } else if (action === "search-eight-time") {
+      switchView("eight");
+    } else {
+      switchView("calculation");
+    }
     computePayload(formPayload()).catch((error) => showResult({ error: error.message }));
   });
 }
@@ -959,14 +1047,11 @@ function formPayload() {
   syncAllDateTimeWidgets();
   const formData = chartValues();
   const mode = formData.mode || "traditional";
-  const canvasRect = chartImage.closest(".chart-canvas").getBoundingClientRect();
-  const controlRect = document.querySelector(".control-panel")?.getBoundingClientRect();
+  const layout = chartLayoutMetrics();
   const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
-  const layoutWidth = Math.max(360, Math.round(canvasRect.width));
-  const layoutHeight = Math.max(360, Math.round(canvasRect.height));
-  const reservedWidth = controlRect
-    ? Math.min(Math.max(0, Math.round(controlRect.width + 34)), Math.max(0, layoutWidth - 480))
-    : 0;
+  const layoutWidth = layout.width;
+  const layoutHeight = layout.height;
+  const reservedWidth = layout.reservedWidth;
   const autoWidth = Math.max(360, Math.round(layoutWidth * pixelRatio));
   const autoHeight = Math.max(360, Math.round(layoutHeight * pixelRatio));
   const requestedWidth = boundedNumber(settings.chartWidth, 0, 0, 5000);
@@ -1039,6 +1124,50 @@ function signDisplayArrayFromSelection(values) {
   return PLANET_CHOICES
     .map((choice, index) => DEFAULT_SIGN_DISPLAY[index] < 0 ? "-1" : (selected.has(choice) ? "1" : "0"))
     .join(",");
+}
+
+function positiveRectSize(rect) {
+  return rect && rect.width > 80 && rect.height > 80;
+}
+
+function fallbackChartLayout() {
+  const workspaceRect = workspace?.getBoundingClientRect();
+  const viewportWidth = window.innerWidth || 1280;
+  const viewportHeight = window.innerHeight || 800;
+  const width = positiveRectSize(workspaceRect)
+    ? Math.max(360, Math.round(workspaceRect.width - 10))
+    : Math.max(360, viewportWidth - 12);
+  const height = positiveRectSize(workspaceRect)
+    ? Math.max(360, Math.round(workspaceRect.height - 10))
+    : Math.max(360, viewportHeight - 78);
+  const panelWidth = Math.min(Math.max(300, Math.round(viewportWidth * 0.24)), 500);
+  return {
+    width,
+    height,
+    reservedWidth: Math.min(panelWidth + 34, Math.max(0, width - 480))
+  };
+}
+
+function chartLayoutMetrics() {
+  const canvasRect = chartImage.closest(".chart-canvas")?.getBoundingClientRect();
+  const controlRect = document.querySelector(".control-panel")?.getBoundingClientRect();
+  if (positiveRectSize(canvasRect)) {
+    const layoutWidth = Math.max(360, Math.round(canvasRect.width));
+    const layoutHeight = Math.max(360, Math.round(canvasRect.height));
+    const measuredReserved = positiveRectSize(controlRect)
+      ? Math.round(controlRect.width + 34)
+      : fallbackChartLayout().reservedWidth;
+    lastChartLayout = {
+      width: layoutWidth,
+      height: layoutHeight,
+      reservedWidth: Math.min(Math.max(0, measuredReserved), Math.max(0, layoutWidth - 480))
+    };
+    return lastChartLayout;
+  }
+  if (lastChartLayout) {
+    return lastChartLayout;
+  }
+  return fallbackChartLayout();
 }
 
 async function computePayload(payload) {
@@ -1318,6 +1447,19 @@ document.querySelectorAll("[data-pref]").forEach((input) => {
     if (input.dataset.pref === "monochrome") {
       scheduleCompute();
     }
+    closeMenus();
+  });
+});
+
+document.querySelectorAll("[data-tab-panel]").forEach((input) => {
+  input.addEventListener("change", () => {
+    const key = tabPanelSettingKey(input.dataset.tabPanel);
+    if (!key) {
+      return;
+    }
+    updateSetting(key, input.checked);
+    notify("項目顯示已更新", input.closest("label")?.textContent.trim() || input.dataset.tabPanel);
+    closeMenus();
   });
 });
 
@@ -1410,7 +1552,7 @@ function runMenuAction(action) {
     return;
   }
   if (action === "set-current-time") {
-    initializeCurrentDateTimes();
+    setNowDateTimeToCurrent();
     updateAllDateTimeWidgets();
     scheduleCompute();
     return;
@@ -1641,12 +1783,10 @@ menuCascades.forEach((cascade) => {
   const summary = cascade.querySelector("summary");
   summary.addEventListener("click", (event) => {
     event.preventDefault();
-    const shouldOpen = !cascade.open;
+    event.stopPropagation();
     closeMenuCascades(cascade);
-    cascade.open = shouldOpen;
-    if (shouldOpen) {
-      positionMenuCascade(cascade);
-    }
+    cascade.open = true;
+    positionMenuCascade(cascade);
   });
   summary.addEventListener("pointerenter", () => {
     closeMenuCascades(cascade);

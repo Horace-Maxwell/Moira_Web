@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-66">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-71">
 </head>
 <body>
   <div class="app-window">
@@ -104,10 +104,10 @@
           <details class="menu-cascade">
             <summary>項目顯示</summary>
             <div class="menu-panel menu-subpanel">
-              <button class="menu-command" type="button" data-view-target="calculation">✓ 星圖計算</button>
-              <button class="menu-command" type="button" data-view-target="eight">✓ 四柱八字</button>
-              <button class="menu-command" type="button" data-view-target="notes">✓ 星圖批註</button>
-              <button class="menu-command" type="button" data-view-target="manage">✓ 資料管理系統</button>
+              <label class="menu-check-row"><input type="checkbox" data-tab-panel="calculation" checked> 星圖計算</label>
+              <label class="menu-check-row"><input type="checkbox" data-tab-panel="eight" checked> 四柱八字</label>
+              <label class="menu-check-row"><input type="checkbox" data-tab-panel="notes" checked> 星圖批註</label>
+              <label class="menu-check-row"><input type="checkbox" data-tab-panel="manage" checked> 資料管理系統</label>
             </div>
           </details>
           <details class="menu-cascade">
@@ -373,6 +373,6 @@
     </form>
   </dialog>
 
-  <script src="/app.js?v=app-ui-native-66"></script>
+  <script src="/app.js?v=app-ui-native-71"></script>
 </body>
 </html>
