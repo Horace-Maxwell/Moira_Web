@@ -37,6 +37,7 @@ const optionDialogBody = document.querySelector("#optionDialogBody");
 const optionDialogOk = document.querySelector("#optionDialogOk");
 const storageKey = "moira-web.entries";
 const settingsKey = "moira-web.settings";
+const maxChartImageSize = 5000;
 let currentTextPages = null;
 let entries = loadEntries();
 let autoComputeTimer = null;
@@ -1271,18 +1272,23 @@ function formPayload() {
   const mode = formData.mode || "traditional";
   const layout = chartLayoutMetrics();
   const devicePixelRatio = Math.max(1, window.devicePixelRatio || 1);
-  const pixelRatio = settings.highResolutionUi
+  const desiredPixelRatio = settings.highResolutionUi
     ? Math.max(devicePixelRatio, 2)
     : devicePixelRatio;
-  const layoutWidth = layout.width;
-  const layoutHeight = layout.height;
-  const reservedWidth = layout.reservedWidth;
-  const autoWidth = Math.max(360, Math.round(layoutWidth * pixelRatio));
-  const autoHeight = Math.max(360, Math.round(layoutHeight * pixelRatio));
-  const requestedWidth = boundedNumber(settings.chartWidth, 0, 0, 5000);
-  const requestedHeight = boundedNumber(settings.chartHeight, 0, 0, 5000);
-  const outputWidth = Math.max(autoWidth, requestedWidth);
-  const outputHeight = Math.max(autoHeight, requestedHeight);
+  const layoutWidth = Math.min(maxChartImageSize, layout.width);
+  const layoutHeight = Math.min(maxChartImageSize, layout.height);
+  const reservedWidth = Math.min(layout.reservedWidth, Math.max(0, layoutWidth - 480));
+  const maxPixelRatio = Math.min(
+    maxChartImageSize / Math.max(1, layoutWidth),
+    maxChartImageSize / Math.max(1, layoutHeight)
+  );
+  const pixelRatio = Math.min(desiredPixelRatio, maxPixelRatio);
+  const autoWidth = Math.max(360, Math.min(maxChartImageSize, Math.round(layoutWidth * pixelRatio)));
+  const autoHeight = Math.max(360, Math.min(maxChartImageSize, Math.round(layoutHeight * pixelRatio)));
+  const requestedWidth = boundedNumber(settings.chartWidth, 0, 0, maxChartImageSize);
+  const requestedHeight = boundedNumber(settings.chartHeight, 0, 0, maxChartImageSize);
+  const outputWidth = Math.min(maxChartImageSize, Math.max(autoWidth, requestedWidth));
+  const outputHeight = Math.min(maxChartImageSize, Math.max(autoHeight, requestedHeight));
   return {
     mode,
     entryType: mode === "pick" ? "pick" : "data",

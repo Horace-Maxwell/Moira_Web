@@ -242,21 +242,37 @@ async function main() {
     assert(await page.locator("#importMri").isVisible() && await page.locator("#exportMri").isVisible(),
       "工具列顯示 > 檔案圖示 should restore file toolbar buttons");
 
+    await page.locator(".main-tabs .tab[data-view='chart']").click();
+    await page.locator("#chartView.active #chartImage:not([hidden])").waitFor({ state: "visible", timeout: 30000 });
     await page.locator("details.menu").nth(5).locator(":scope > summary").click();
-    const highResRequest = page.waitForRequest((request) => {
-      if (request.method() !== "POST" || !request.url().includes("/api/chart/compute")) {
-        return false;
-      }
-      try {
-        return Number(JSON.parse(request.postData() || "{}").imageZoom) >= 200;
-      } catch {
-        return false;
-      }
-    }, { timeout: 15000 });
+    const highResResponse = page.waitForResponse((response) => response.url().includes("/api/chart/compute"), { timeout: 15000 });
     await page.locator("details.menu:nth-of-type(6) > .menu-panel").getByText("高解析度使用者介面").click();
-    await highResRequest;
+    const highResResult = await highResResponse;
+    assert(highResResult.ok(), `檢視 > 高解析度使用者介面 returned ${highResResult.status()}`);
     assert(await page.locator("body.high-resolution-ui").count() === 1,
       "檢視 > 高解析度使用者介面 should update body state and trigger a high-density chart request");
+    await page.locator("#chartImage:not([hidden])").waitFor({ state: "visible", timeout: 30000 });
+    assert(await page.locator("#chartImage:not([hidden])").isVisible() && await page.locator("#emptyChart").isHidden(),
+      "檢視 > 高解析度使用者介面 should keep the chart visible after recompute");
+
+    const widePage = await browser.newPage({
+      viewport: { width: 4096, height: 2304 },
+      deviceScaleFactor: 2
+    });
+    await widePage.goto(baseUrl, { waitUntil: "load" });
+    await widePage.locator("#chartImage:not([hidden])").waitFor({ state: "visible", timeout: 30000 });
+    await widePage.locator("details.menu").nth(5).locator(":scope > summary").click();
+    const wideResponse = widePage.waitForResponse((response) => response.url().includes("/api/chart/compute"), { timeout: 30000 });
+    await widePage.locator("details.menu:nth-of-type(6) > .menu-panel").getByText("高解析度使用者介面").click();
+    const wideResult = await wideResponse;
+    const wideBody = await wideResult.text();
+    assert(wideResult.ok(), `wide high-resolution recompute returned ${wideResult.status()}: ${wideBody.slice(0, 300)}`);
+    const widePayload = JSON.parse(wideResult.request().postData() || "{}");
+    assert(Number(widePayload.imageWidth) <= 5000 && Number(widePayload.imageHeight) <= 5000,
+      `wide high-resolution request exceeded backend image limits: ${widePayload.imageWidth}x${widePayload.imageHeight}`);
+    assert(await widePage.locator("#chartImage:not([hidden])").isVisible() && await widePage.locator("#emptyChart").isHidden(),
+      "wide high-resolution viewport should still display a computed chart");
+    await widePage.close();
 
     console.log(`UI layout check passed for ${baseUrl}`);
   } finally {
