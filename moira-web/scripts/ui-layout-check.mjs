@@ -77,6 +77,9 @@ async function main() {
       naturalWidth: img.naturalWidth,
       naturalHeight: img.naturalHeight,
       hidden: img.hidden,
+      clientWidth: Math.round(img.getBoundingClientRect().width),
+      clientHeight: Math.round(img.getBoundingClientRect().height),
+      devicePixelRatio: window.devicePixelRatio || 1,
       objectPosition: getComputedStyle(img).objectPosition
     }));
     assert(!imageProbe.hidden, "chart image is hidden");
@@ -84,6 +87,10 @@ async function main() {
       `chart image payload too small: ${imageProbe.naturalWidth}x${imageProbe.naturalHeight}`);
     assert(imageProbe.objectPosition === "0% 0%" || imageProbe.objectPosition === "left top",
       `chart image should be left/top aligned, got ${imageProbe.objectPosition}`);
+    assert(imageProbe.naturalWidth >= Math.round(imageProbe.clientWidth * imageProbe.devicePixelRatio * 0.9),
+      `chart image should be generated near display density, got ${JSON.stringify(imageProbe)}`);
+    assert(imageProbe.naturalHeight >= Math.round(imageProbe.clientHeight * imageProbe.devicePixelRatio * 0.9),
+      `chart image should be generated near display density, got ${JSON.stringify(imageProbe)}`);
 
     await page.locator("details.menu").nth(3).locator(":scope > summary").click();
     await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(0).locator("summary").hover();

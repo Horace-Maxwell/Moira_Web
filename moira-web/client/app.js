@@ -64,8 +64,8 @@ const defaultSettings = {
   highResolutionUi: false,
   simplifiedLabels: false,
   printNotes: false,
-  chartWidth: 1180,
-  chartHeight: 760,
+  chartWidth: 0,
+  chartHeight: 0,
   fontDirection: "horizontal",
   interfaceFont: "Lucida Grande",
   themeColor: "#30302f",
@@ -510,8 +510,8 @@ function downloadChartImage() {
 
 function openImageSizeDialog() {
   const container = document.createElement("div");
-  const width = numberInput(settings.chartWidth, 360, 5000);
-  const height = numberInput(settings.chartHeight, 360, 5000);
+  const width = numberInput(settings.chartWidth || "", 0, 5000);
+  const height = numberInput(settings.chartHeight || "", 0, 5000);
   container.append(
     dialogField("圖形寬度", width),
     dialogField("圖形高度", height),
@@ -521,8 +521,8 @@ function openImageSizeDialog() {
     })
   );
   openBasicDialog("圖形面積設定", container, () => {
-    settings.chartWidth = boundedNumber(width.value, 1180, 360, 5000);
-    settings.chartHeight = boundedNumber(height.value, 760, 360, 5000);
+    settings.chartWidth = boundedNumber(width.value, 0, 0, 5000);
+    settings.chartHeight = boundedNumber(height.value, 0, 0, 5000);
     saveSettings();
     scheduleCompute();
   });
@@ -732,8 +732,12 @@ function formPayload() {
   const pixelRatio = window.devicePixelRatio || 1;
   const layoutWidth = Math.max(360, Math.round(canvasRect.width));
   const layoutHeight = Math.max(360, Math.round(canvasRect.height));
-  const outputWidth = boundedNumber(settings.chartWidth, layoutWidth * pixelRatio, 360, 5000);
-  const outputHeight = boundedNumber(settings.chartHeight, layoutHeight * pixelRatio, 360, 5000);
+  const autoWidth = Math.max(360, Math.round(layoutWidth * pixelRatio));
+  const autoHeight = Math.max(360, Math.round(layoutHeight * pixelRatio));
+  const requestedWidth = boundedNumber(settings.chartWidth, 0, 0, 5000);
+  const requestedHeight = boundedNumber(settings.chartHeight, 0, 0, 5000);
+  const outputWidth = Math.max(autoWidth, requestedWidth);
+  const outputHeight = Math.max(autoHeight, requestedHeight);
   return {
     mode,
     entryType: mode === "pick" ? "pick" : "data",
