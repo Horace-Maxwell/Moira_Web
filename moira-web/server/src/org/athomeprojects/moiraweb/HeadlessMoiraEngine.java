@@ -48,6 +48,7 @@ final class HeadlessMoiraEngine {
         int astroMode = parseAstroMode(value(request, "astroMode", "natal"));
         ChartMode.setChartMode(chartMode);
         ChartMode.setAstroMode(astroMode);
+        applyRuntimePreferences(request);
         ChartMode.setSingleWheelMode(booleanValue(request, "singleWheel", false));
 
         HeadlessTextTab dataTab = new HeadlessTextTab();
@@ -60,7 +61,9 @@ final class HeadlessMoiraEngine {
                 chartMode == ChartMode.ASTRO_MODE));
         chart.setShowGauquelin(booleanValue(request, "showGauquelin", false));
         chart.setShowFixstar(booleanValue(request, "showFixstar", false));
+        chart.setShowHoriz(booleanValue(request, "showHoriz", false));
         chart.setDaySet(booleanValue(request, "daySet", true));
+        chart.setNoColor(booleanValue(request, "noColor", false));
         chart.setTimeAdjust(intValue(request, "timeAdjust",
                 Resource.getPrefInt("longitude_adjust")));
         String mountainPos = value(request, "mountainPos", "");
@@ -134,6 +137,77 @@ final class HeadlessMoiraEngine {
             return null;
         }
         return configured;
+    }
+
+    private void applyRuntimePreferences(Map<String, String> request) {
+        boolean showFixstar = booleanValue(request, "showFixstar", false);
+        boolean showCompass = booleanValue(request, "showCompass", false);
+        boolean verticalText = "vertical".equalsIgnoreCase(value(request,
+                "fontDirection", "vertical"));
+        Resource.putPrefInt("show_compass", showCompass ? 1 : 0);
+        Resource.putPrefInt("enable_fixstar", showFixstar ? 1 : 0);
+        Resource.putPrefInt("explain_star", booleanValue(request,
+                "showAnnotations", false) ? 1 : 0);
+        Resource.putPrefInt("display_vertical_text", verticalText ? 1 : 0);
+        Resource.putPrefInt("image_vertical_text", verticalText ? 1 : 0);
+        Resource.putPrefInt("show_house_system", booleanValue(request,
+                "showHouseSystem", false) ? 1 : 0);
+        Resource.putPrefInt("show_style", booleanValue(request,
+                "showStyle", true) ? 1 : 0);
+        Resource.putPrefInt("style_level", boundedInt(request, "styleLevel",
+                Resource.getPrefInt("style_level"), 0, 9));
+        Resource.putPrefInt("show_angle_marker", booleanValue(request,
+                "showAngleMarker", false) ? 1 : 0);
+        Resource.putPrefInt("life_mode", boundedInt(request, "lifeMode",
+                Resource.getPrefInt("life_mode"), 0, 9));
+        Resource.putPrefInt("self_mode", boundedInt(request, "selfMode",
+                Resource.getPrefInt("self_mode"), 0, 9));
+        Resource.putPrefInt("house_system_index", boundedInt(request,
+                "houseSystemIndex", Resource.getPrefInt("house_system_index"),
+                0, 10));
+        Resource.putPrefInt("pick_house_system_index", boundedInt(request,
+                "pickHouseSystemIndex",
+                Resource.getPrefInt("pick_house_system_index"), 0, 10));
+        boolean siderealMode = booleanValue(request, "astroSystemMode",
+                "sidereal".equalsIgnoreCase(value(request, "zodiacMode", "")));
+        Resource.putPrefInt("astro_system_mode", siderealMode ? 1 : 0);
+        Resource.putPrefInt("astro_sidereal_index", boundedInt(request,
+                "astroSiderealIndex",
+                Resource.getPrefInt("astro_sidereal_index"), 0, 20));
+        Resource.putPrefInt("degree_mode", "sidereal".equalsIgnoreCase(value(
+                request, "zodiacMode", "")) ? ChartMode.ZODIAC_MODE
+                        : ChartMode.MOUNTAIN_MODE);
+        putIntArrayPreference("signDisplay", (ChartMode
+                .isChartMode(ChartMode.ASTRO_MODE) ? "astro_" : "")
+                + "sign_display", request);
+        putIntArrayPreference("aspectDisplay", ChartMode.getModePrefix()
+                + "aspects_display", request);
+        putIntArrayPreference("angleMarkerDisplay", "angle_marker_display",
+                request);
+    }
+
+    private void putIntArrayPreference(String requestKey, String prefKey,
+            Map<String, String> request) {
+        int[] array = intArrayValue(request.get(requestKey));
+        if (array != null) {
+            Resource.putPrefIntArray(prefKey, array);
+        }
+    }
+
+    private int[] intArrayValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        String[] parts = value.split(",");
+        int[] array = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            try {
+                array[i] = Integer.parseInt(parts[i].trim());
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+        }
+        return array;
     }
 
     private DataEntry entryFromRequest(Map<String, String> request) {

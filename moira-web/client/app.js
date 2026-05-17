@@ -54,6 +54,13 @@ const viewTitles = {
   notes: "星盤 - 批注",
   manage: "數據管理 - 回歸制"
 };
+const PLANET_CHOICES = [
+  "日", "月", "金", "木", "水", "火", "土", "天", "海", "冥", "計", "孛",
+  "紫", "黃", "福", "升", "頂", "凱", "穀", "智", "婚", "灶"
+];
+const DEFAULT_SIGN_DISPLAY = [
+  1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, -1, -1, -1, -1, -1
+];
 const defaultSettings = {
   toolbarFile: true,
   toolbarEdit: true,
@@ -66,11 +73,24 @@ const defaultSettings = {
   printNotes: false,
   chartWidth: 0,
   chartHeight: 0,
-  fontDirection: "horizontal",
+  fontDirection: "vertical",
   interfaceFont: "Lucida Grande",
   themeColor: "#30302f",
-  selectedPlanets: ["日", "月", "水", "金", "火", "木", "土"],
+  showHouseSystem: false,
+  showStyle: true,
+  styleLevel: 3,
+  showAngleMarker: false,
+  houseSystemIndex: "0",
+  pickHouseSystemIndex: "3",
+  astroSystemMode: false,
+  astroSiderealIndex: "0",
+  lifeMode: "0",
+  selfMode: "0",
+  synastryMode: "comparison",
+  selectedSpirits: ["神煞註釋"],
+  selectedPlanets: ["日", "月", "金", "木", "水", "火", "土", "計", "孛", "紫", "黃"],
   selectedAspects: ["合", "刑", "沖", "拱", "半合"],
+  selectedAngleMarkers: ["合", "刑", "拱"],
   houseSystem: "Placidus",
   zodiacMode: "tropical",
   searchMethod: "transit"
@@ -484,6 +504,10 @@ function openStoredChecklist(title, settingName, choices, note) {
   openBasicDialog(title, container, collect);
 }
 
+function openComputedChecklist(title, settingName, choices, note) {
+  openStoredChecklist(title, settingName, choices, note || "這些選項會立即參與下一次盤面計算。");
+}
+
 function openTextInfo(title, message) {
   const container = document.createElement("div");
   const paragraph = document.createElement("p");
@@ -493,6 +517,181 @@ function openTextInfo(title, message) {
   note.textContent = "此入口已可点击，并会保存相关 Web 状态；需要 legacy 后端专门算法的部分会继续逐项接入。";
   container.append(paragraph, note);
   openBasicDialog(title, container);
+}
+
+function openLifeBodyDialog() {
+  const container = document.createElement("div");
+  const lifeMode = selectInput(settings.lifeMode, [
+    ["0", "命宮依原始算法"],
+    ["1", "命宮依上升"],
+    ["2", "命宮依太陽"]
+  ]);
+  const selfMode = selectInput(settings.selfMode, [
+    ["0", "身主依原始算法"],
+    ["1", "身主依月亮"],
+    ["2", "身主依太陽"]
+  ]);
+  container.append(
+    dialogField("命宮", lifeMode),
+    dialogField("身主", selfMode),
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "對應桌面版「立命安身」，會寫入 legacy 計算偏好並重新繪盤。"
+    })
+  );
+  openBasicDialog("立命安身", container, () => {
+    settings.lifeMode = lifeMode.value;
+    settings.selfMode = selfMode.value;
+    saveSettings();
+    scheduleCompute();
+  });
+}
+
+function openHouseSystemDialog() {
+  const container = document.createElement("div");
+  const showHouseSystem = checkboxInput(settings.showHouseSystem);
+  const houseSystemIndex = selectInput(settings.houseSystemIndex, [
+    ["0", "Placidus"],
+    ["1", "Koch"],
+    ["2", "Porphyrius"],
+    ["3", "Regiomontanus"],
+    ["4", "Campanus"],
+    ["5", "Equal"],
+    ["6", "Vehlow"],
+    ["7", "Meridian"],
+    ["8", "Horizontal"],
+    ["9", "Topocentric"],
+    ["10", "Alcabitius"]
+  ]);
+  const pickHouseSystemIndex = selectInput(settings.pickHouseSystemIndex, [
+    ["0", "Placidus"],
+    ["1", "Koch"],
+    ["2", "Porphyrius"],
+    ["3", "Regiomontanus"],
+    ["4", "Campanus"],
+    ["5", "Equal"],
+    ["6", "Vehlow"],
+    ["7", "Meridian"],
+    ["8", "Horizontal"],
+    ["9", "Topocentric"],
+    ["10", "Alcabitius"]
+  ]);
+  container.append(
+    dialogField("顯示十二宮", showHouseSystem),
+    dialogField("命盤分宮制", houseSystemIndex),
+    dialogField("擇日分宮制", pickHouseSystemIndex)
+  );
+  openBasicDialog("選擇分宮制", container, () => {
+    settings.showHouseSystem = showHouseSystem.checked;
+    settings.houseSystemIndex = houseSystemIndex.value;
+    settings.pickHouseSystemIndex = pickHouseSystemIndex.value;
+    settings.houseSystem = houseSystemIndex.options[houseSystemIndex.selectedIndex]?.textContent || "Placidus";
+    saveSettings();
+    scheduleCompute();
+  });
+}
+
+function openZodiacDialog() {
+  const container = document.createElement("div");
+  const astroSystemMode = checkboxInput(settings.astroSystemMode);
+  const astroSiderealIndex = selectInput(settings.astroSiderealIndex, [
+    ["0", "Fagan/Bradley"],
+    ["1", "Lahiri"],
+    ["2", "De Luce"],
+    ["3", "Raman"],
+    ["4", "Ushashashi"]
+  ]);
+  const degreeMode = selectInput(settings.zodiacMode, [
+    ["tropical", "回歸制"],
+    ["sidereal", "恆星制"]
+  ]);
+  container.append(
+    dialogField("占星盤使用恆星制", astroSystemMode),
+    dialogField("恆星制", astroSiderealIndex),
+    dialogField("七政/擇日度數", degreeMode)
+  );
+  openBasicDialog("選擇回歸恆星制", container, () => {
+    settings.astroSystemMode = astroSystemMode.checked;
+    settings.astroSiderealIndex = astroSiderealIndex.value;
+    settings.zodiacMode = degreeMode.value;
+    saveSettings();
+    scheduleCompute();
+  });
+}
+
+function openPatternDialog() {
+  const container = document.createElement("div");
+  const showStyle = checkboxInput(settings.showStyle);
+  const styleLevel = numberInput(settings.styleLevel, 0, 9);
+  container.append(
+    dialogField("顯示政餘格局", showStyle),
+    dialogField("顯示程度", styleLevel)
+  );
+  openBasicDialog("選擇政餘格局", container, () => {
+    settings.showStyle = showStyle.checked;
+    settings.styleLevel = boundedNumber(styleLevel.value, 3, 0, 9);
+    saveSettings();
+    scheduleCompute();
+  });
+}
+
+function openSynastryDialog() {
+  const container = document.createElement("div");
+  const astroMode = selectInput(settings.synastryMode, [
+    ["relationship", "關係盤"],
+    ["composite", "組合中點盤"],
+    ["comparison", "比較盤"]
+  ]);
+  const singleWheel = checkboxInput(chartField("singleWheel")?.checked);
+  container.append(
+    dialogField("合盤計算", astroMode),
+    dialogField("單圈顯示", singleWheel),
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "會切換到占星盤並套用桌面版 legacy 的合盤模式；目前使用表單中的出生與流年資料作為兩組計算時間。"
+    })
+  );
+  openBasicDialog("選擇合盤計算", container, () => {
+    settings.synastryMode = astroMode.value;
+    saveSettings();
+    setChartValue("mode", "western");
+    setChartValue("astroMode", astroMode.value);
+    setChartValue("singleWheel", singleWheel.checked);
+    syncMenuCheckmarks();
+    scheduleCompute();
+  });
+}
+
+function openSpiritDialog() {
+  const container = document.createElement("div");
+  const showAnnotations = checkboxInput(chartField("showAnnotations")?.checked);
+  const showFixstar = checkboxInput(chartField("showFixstar")?.checked);
+  const showCompass = checkboxInput(chartField("showCompass")?.checked);
+  const [grid, collectStored] = checkGrid("神煞項目", settings.selectedSpirits || [], [
+    "神煞註釋",
+    "三垣列宿",
+    "開禧宿度"
+  ], (values) => {
+    settings.selectedSpirits = values;
+    saveSettings();
+  });
+  container.append(
+    dialogField("顯示神煞註釋", showAnnotations),
+    dialogField("顯示三垣列宿", showFixstar),
+    dialogField("顯示開禧宿度", showCompass),
+    grid,
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "這些選項會寫入 legacy 偏好並重新繪盤；若同時啟用三垣列宿與開禧宿度，桌面版演算法會優先顯示三垣列宿。"
+    })
+  );
+  openBasicDialog("選擇神煞", container, () => {
+    collectStored();
+    setChartValue("showAnnotations", showAnnotations.checked);
+    setChartValue("showFixstar", showFixstar.checked);
+    setChartValue("showCompass", showCompass.checked);
+    scheduleCompute();
+  });
 }
 
 function downloadChartImage() {
@@ -597,6 +796,7 @@ function openColorDialog() {
     saveSettings();
     applySettings();
     notify("色彩設定已保存", color.value);
+    scheduleCompute();
   });
 }
 
@@ -759,10 +959,26 @@ function formPayload() {
     showAspects: formData.showAspects === "on" ? "true" : "false",
     showGauquelin: formData.showGauquelin === "on" ? "true" : "false",
     showFixstar: formData.showFixstar === "on" ? "true" : "false",
+    showCompass: formData.showCompass === "on" ? "true" : "false",
     showHoriz: formData.showHoriz === "on" ? "true" : "false",
     singleWheel: formData.singleWheel === "on" ? "true" : "false",
     showMansions: formData.showMansions === "on" ? "true" : "false",
     showAnnotations: formData.showAnnotations === "on" ? "true" : "false",
+    noColor: settings.monochrome ? "true" : "false",
+    fontDirection: settings.fontDirection,
+    showHouseSystem: settings.showHouseSystem ? "true" : "false",
+    showStyle: settings.showStyle ? "true" : "false",
+    styleLevel: String(settings.styleLevel),
+    showAngleMarker: settings.showAngleMarker ? "true" : "false",
+    houseSystemIndex: String(settings.houseSystemIndex),
+    pickHouseSystemIndex: String(settings.pickHouseSystemIndex),
+    astroSystemMode: settings.astroSystemMode ? "true" : "false",
+    astroSiderealIndex: String(settings.astroSiderealIndex),
+    lifeMode: String(settings.lifeMode),
+    selfMode: String(settings.selfMode),
+    aspectDisplay: displayArrayFromSelection(settings.selectedAspects, ASPECT_CHOICES),
+    angleMarkerDisplay: displayArrayFromSelection(settings.selectedAngleMarkers, ANGLE_MARKER_CHOICES),
+    signDisplay: signDisplayArrayFromSelection(settings.selectedPlanets),
     daySet: formData.daySet === "off" ? "false" : "true",
     timeAdjust: formData.timeAdjust || "2",
     mountainPos: formData.mountainPos || "0.0",
@@ -774,6 +990,21 @@ function formPayload() {
     reservedWidth: String(reservedWidth),
     imageZoom: String(Math.max(100, Math.round(pixelRatio * 100)))
   };
+}
+
+const ASPECT_CHOICES = ["合", "沖", "刑", "拱", "六合", "八分", "補八分", "半合", "梅花"];
+const ANGLE_MARKER_CHOICES = ["合", "沖", "刑", "拱", "六合", "半合"];
+
+function displayArrayFromSelection(values, choices) {
+  const selected = new Set(values || []);
+  return choices.map((choice) => selected.has(choice) ? "1" : "0").join(",");
+}
+
+function signDisplayArrayFromSelection(values) {
+  const selected = new Set(values || []);
+  return PLANET_CHOICES
+    .map((choice, index) => DEFAULT_SIGN_DISPLAY[index] < 0 ? "-1" : (selected.has(choice) ? "1" : "0"))
+    .join(",");
 }
 
 async function computePayload(payload) {
@@ -981,6 +1212,7 @@ function fillForm(entry) {
   setChartValue("showAspects", entry.showAspects === true);
   setChartValue("showGauquelin", entry.showGauquelin === true);
   setChartValue("showFixstar", entry.showFixstar === true);
+  setChartValue("showCompass", entry.showCompass === true);
   setChartValue("showHoriz", entry.showHoriz === true);
   setChartValue("singleWheel", entry.singleWheel === true);
   setChartValue("showMansions", entry.showMansions === true);
@@ -1049,6 +1281,9 @@ document.querySelectorAll("[data-pref]").forEach((input) => {
   input.addEventListener("change", () => {
     updateSetting(input.dataset.pref, input.checked);
     notify("選項已更新", input.closest("label")?.textContent.trim() || input.dataset.pref);
+    if (input.dataset.pref === "monochrome") {
+      scheduleCompute();
+    }
   });
 });
 
@@ -1218,28 +1453,63 @@ function runMenuAction(action) {
     openLunarConverterDialog();
     return;
   }
-  if (action === "edit-life-palace" || action === "edit-star-position" || action === "life-body-settings" || action === "pick-settings") {
-    openTextInfo(buttonTitle(action), "這個桌面功能在 Web 版先作為可操作入口保留；目前會使用表單中的時間、地點與山向重新計算。");
+  if (action === "life-body-settings") {
+    openLifeBodyDialog();
+    return;
+  }
+  if (action === "edit-life-palace") {
+    openLifeBodyDialog();
+    return;
+  }
+  if (action === "edit-star-position") {
+    openComputedChecklist("修改星曜位置", "selectedPlanets", PLANET_CHOICES);
+    return;
+  }
+  if (action === "pick-settings") {
+    setChartValue("mode", "pick");
+    syncMenuCheckmarks();
+    openHouseSystemDialog();
     return;
   }
   if (action === "planet-settings") {
-    openStoredChecklist("選擇星曜", "selectedPlanets", ["日", "月", "水", "金", "火", "木", "土", "天", "海", "冥", "計", "孛", "福", "升", "頂"]);
+    openComputedChecklist("選擇星曜", "selectedPlanets", PLANET_CHOICES);
     return;
   }
   if (action === "aspect-settings" || action === "angle-settings" || action === "strength-settings") {
-    openStoredChecklist(buttonTitle(action), "selectedAspects", ["合", "半合", "刑", "拱", "沖", "六合", "十二分", "八分"]);
+    if (action === "angle-settings") {
+      const container = document.createElement("div");
+      const enable = checkboxInput(settings.showAngleMarker);
+      const [grid, collect] = checkGrid("角距標記", settings.selectedAngleMarkers || [], ANGLE_MARKER_CHOICES, (values) => {
+        settings.showAngleMarker = enable.checked;
+        settings.selectedAngleMarkers = values;
+        saveSettings();
+        scheduleCompute();
+      });
+      container.append(dialogField("顯示角距標記", enable), grid);
+      openBasicDialog("選擇角距顯示", container, collect);
+    } else {
+      openComputedChecklist(buttonTitle(action), "selectedAspects", ASPECT_CHOICES);
+    }
     return;
   }
   if (action === "house-settings") {
-    openSelectSetting("選擇分宮制", "houseSystem", [["Placidus", "Placidus"], ["Koch", "Koch"], ["Equal", "Equal"], ["Whole Sign", "Whole Sign"]]);
+    openHouseSystemDialog();
     return;
   }
   if (action === "zodiac-settings") {
-    openSelectSetting("選擇回歸恆星制", "zodiacMode", [["tropical", "回歸制"], ["sidereal", "恆星制"]]);
+    openZodiacDialog();
     return;
   }
-  if (action === "synastry-settings" || action === "spirit-settings" || action === "pattern-settings") {
-    openTextInfo(buttonTitle(action), "相關選項已可進入設定流程；完整細項會保存在瀏覽器端，等待對應 legacy 規則逐項接入。");
+  if (action === "pattern-settings") {
+    openPatternDialog();
+    return;
+  }
+  if (action === "synastry-settings") {
+    openSynastryDialog();
+    return;
+  }
+  if (action === "spirit-settings") {
+    openSpiritDialog();
     return;
   }
   if (action === "font-direction") {
@@ -1411,6 +1681,7 @@ function makeEntryFromPayload(payload, id = entryId()) {
       showAspects: payload.showAspects === "true",
       showGauquelin: payload.showGauquelin === "true",
       showFixstar: payload.showFixstar === "true",
+      showCompass: payload.showCompass === "true",
       showHoriz: payload.showHoriz === "true",
       singleWheel: payload.singleWheel === "true",
       showMansions: payload.showMansions === "true",
@@ -1523,6 +1794,7 @@ function entryToPayload(entry) {
     showAspects: entry.showAspects === true ? "true" : "false",
     showGauquelin: entry.showGauquelin === true ? "true" : "false",
     showFixstar: entry.showFixstar === true ? "true" : "false",
+    showCompass: entry.showCompass === true ? "true" : "false",
     showHoriz: entry.showHoriz === true ? "true" : "false",
     singleWheel: entry.singleWheel === true ? "true" : "false",
     showMansions: entry.showMansions === true ? "true" : "false",
@@ -1605,6 +1877,7 @@ function normalizedToEntry(entry) {
     daySet: entry.daySet !== false,
     showGauquelin: entry.showGauquelin === true,
     showFixstar: entry.showFixstar === true,
+    showCompass: entry.showCompass === true,
     showHoriz: entry.showHoriz === true,
     singleWheel: entry.singleWheel === true,
     showMansions: entry.showMansions === true,

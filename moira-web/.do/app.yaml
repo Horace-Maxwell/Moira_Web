@@ -15,7 +15,7 @@ services:
     registry_type: DOCR
     registry: moira-web-horace
     repository: moira-web
-    tag: sharp-render-v1
+    tag: options-parity-v1
     deploy_on_push:
       enabled: false
   http_port: 8080
