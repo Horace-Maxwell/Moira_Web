@@ -45,6 +45,7 @@ let entriesDirty = false;
 let pendingTextImport = null;
 let lastChartLayout = null;
 let lastEditableElement = null;
+let internalClipboardText = "";
 let computeRequestId = 0;
 let settings;
 const monthNames = [
@@ -539,16 +540,19 @@ function selectedEditableElement() {
 }
 
 async function clipboardWrite(text) {
+  internalClipboardText = String(text || "");
   if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(internalClipboardText);
   }
 }
 
 async function clipboardRead() {
   if (navigator.clipboard?.readText) {
-    return navigator.clipboard.readText();
+    const text = await navigator.clipboard.readText();
+    internalClipboardText = text;
+    return text;
   }
-  return "";
+  return internalClipboardText;
 }
 
 function replaceEditableSelection(text) {
@@ -1896,7 +1900,7 @@ function runMenuAction(action) {
         return;
       }
       selectNodeText(node);
-      navigator.clipboard?.writeText(node.textContent || "").catch(() => {});
+      clipboardWrite(node.textContent || "").catch(() => {});
     }
     return;
   }

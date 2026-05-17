@@ -337,15 +337,14 @@ async function main() {
     });
     assert((await localSettings(page)).selectedPlanets.includes("天"), "Edit > edit-star-position did not persist star list");
 
-    await page.locator("input[name='name']").fill("abcdef");
+    await page.locator("input[name='name']").fill("abc中文def");
     await page.locator("input[name='name']").evaluate((node) => {
       node.focus();
-      node.setSelectionRange(1, 4);
+      node.setSelectionRange(3, 5);
     });
     await clickMenuAction(page, MENU.edit, "copy", visitedActions);
     await clickMenuAction(page, MENU.edit, "cut", visitedActions);
-    assert(await inputValue(page, "name") === "aef", "Edit > cut did not edit selected text");
-    await page.evaluate(() => navigator.clipboard.writeText("中文"));
+    assert(await inputValue(page, "name") === "abcdef", "Edit > cut did not edit selected text");
     await page.locator("input[name='name']").evaluate((node) => {
       node.focus();
       node.setSelectionRange(node.value.length, node.value.length);
