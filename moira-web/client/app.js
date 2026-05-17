@@ -86,6 +86,9 @@ const defaultSettings = {
   astroSiderealIndex: "0",
   lifeMode: "0",
   selfMode: "0",
+  pickSiderealMode: false,
+  pickHouseMode: false,
+  pickAdjustMode: false,
   synastryMode: "comparison",
   selectedSpirits: ["神煞註釋"],
   selectedPlanets: ["日", "月", "金", "木", "水", "火", "土", "計", "孛", "紫", "黃"],
@@ -635,6 +638,34 @@ function openPatternDialog() {
   });
 }
 
+function openPickSettingsDialog() {
+  const container = document.createElement("div");
+  const siderealMode = checkboxInput(settings.pickSiderealMode);
+  const houseMode = checkboxInput(settings.pickHouseMode);
+  const adjustMode = checkboxInput(settings.pickAdjustMode);
+  const daySet = checkboxInput(chartField("daySet")?.value !== "off");
+  container.append(
+    dialogField("恆星制擇日", siderealMode),
+    dialogField("古法宮位", houseMode),
+    dialogField("校正宮位", adjustMode),
+    dialogField("日制", daySet),
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "對應桌面版「選擇擇日計算」，會切換到天星擇日並寫入 legacy 擇日偏好。"
+    })
+  );
+  openBasicDialog("選擇擇日計算", container, () => {
+    settings.pickSiderealMode = siderealMode.checked;
+    settings.pickHouseMode = houseMode.checked;
+    settings.pickAdjustMode = adjustMode.checked;
+    saveSettings();
+    setChartValue("mode", "pick");
+    setChartValue("daySet", daySet.checked ? "on" : "off");
+    syncMenuCheckmarks();
+    scheduleCompute();
+  });
+}
+
 function openSynastryDialog() {
   const container = document.createElement("div");
   const astroMode = selectInput(settings.synastryMode, [
@@ -976,6 +1007,9 @@ function formPayload() {
     astroSiderealIndex: String(settings.astroSiderealIndex),
     lifeMode: String(settings.lifeMode),
     selfMode: String(settings.selfMode),
+    pickSiderealMode: settings.pickSiderealMode ? "true" : "false",
+    pickHouseMode: settings.pickHouseMode ? "true" : "false",
+    pickAdjustMode: settings.pickAdjustMode ? "true" : "false",
     aspectDisplay: displayArrayFromSelection(settings.selectedAspects, ASPECT_CHOICES),
     angleMarkerDisplay: displayArrayFromSelection(settings.selectedAngleMarkers, ANGLE_MARKER_CHOICES),
     signDisplay: signDisplayArrayFromSelection(settings.selectedPlanets),
@@ -1466,9 +1500,7 @@ function runMenuAction(action) {
     return;
   }
   if (action === "pick-settings") {
-    setChartValue("mode", "pick");
-    syncMenuCheckmarks();
-    openHouseSystemDialog();
+    openPickSettingsDialog();
     return;
   }
   if (action === "planet-settings") {

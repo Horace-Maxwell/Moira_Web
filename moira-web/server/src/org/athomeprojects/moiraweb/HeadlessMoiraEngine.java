@@ -162,6 +162,12 @@ final class HeadlessMoiraEngine {
                 Resource.getPrefInt("life_mode"), 0, 9));
         Resource.putPrefInt("self_mode", boundedInt(request, "selfMode",
                 Resource.getPrefInt("self_mode"), 0, 9));
+        Resource.putPrefInt("pick_sidereal_mode", booleanValue(request,
+                "pickSiderealMode", false) ? 1 : 0);
+        Resource.putPrefInt("pick_house_mode", booleanValue(request,
+                "pickHouseMode", false) ? 1 : 0);
+        Resource.putPrefInt("pick_adjust_mode", booleanValue(request,
+                "pickAdjustMode", false) ? 1 : 0);
         Resource.putPrefInt("house_system_index", boundedInt(request,
                 "houseSystemIndex", Resource.getPrefInt("house_system_index"),
                 0, 10));

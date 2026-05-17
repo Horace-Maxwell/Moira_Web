@@ -46,6 +46,7 @@ grep -q '選擇回歸恆星制(&S)...' "$HTML_FILE"
 grep -q '選擇合盤計算(&U)...' "$HTML_FILE"
 grep -q '選擇神煞(&S)...' "$HTML_FILE"
 grep -q '選擇政餘格局(&Z)...' "$HTML_FILE"
+grep -q '選擇擇日計算(&H)...' "$HTML_FILE"
 grep -q '字形方向設定(&V)...' "$HTML_FILE"
 grep -q '色彩設定(&C)...' "$HTML_FILE"
 grep -q 'class="menu-cascade"' "$HTML_FILE"
@@ -53,7 +54,7 @@ grep -q '流年星法(&T)...' "$HTML_FILE"
 grep -q '現在時間(&N)' "$HTML_FILE"
 grep -q '操作說明(&O)' "$HTML_FILE"
 grep -q 'name="mode" type="hidden"' "$HTML_FILE"
-grep -q 'app-ui-native-65' "$HTML_FILE"
+grep -q 'app-ui-native-66' "$HTML_FILE"
 if grep -q 'class="titlebar"' "$HTML_FILE"; then
   echo "Unexpected legacy fake titlebar found in HTML." >&2
   exit 1
