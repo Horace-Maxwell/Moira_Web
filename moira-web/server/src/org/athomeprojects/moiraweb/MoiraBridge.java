@@ -84,6 +84,10 @@ final class MoiraBridge {
         return engine.compute(request);
     }
 
+    Map<String, ?> search(Map<String, String> request) {
+        return engine.search(request);
+    }
+
     Map<String, ?> runtimeOptions() {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("chartModes", Arrays.asList(

@@ -44,6 +44,7 @@ let selectedEntryId = entries[0]?.id || null;
 let entriesDirty = false;
 let pendingTextImport = null;
 let lastChartLayout = null;
+let computeRequestId = 0;
 let settings;
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -323,6 +324,41 @@ function setNowDateTimeToCurrent() {
   const now = new Date();
   form.elements.nowDate.value = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   form.elements.nowTime.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+}
+
+function resetChartForm() {
+  const now = new Date();
+  const date = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  const time = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+  selectedEntryId = null;
+  setChartValue("mode", "traditional");
+  setChartValue("astroMode", "natal");
+  setChartValue("name", "");
+  setChartValue("sex", "male");
+  setChartValue("birthDate", date);
+  setChartValue("birthTime", time);
+  setChartValue("nowDate", date);
+  setChartValue("nowTime", time);
+  setChartValue("country", "中国");
+  setChartValue("city", "北京");
+  setChartValue("zone", "Asia/Shanghai");
+  setChartValue("showNow", true);
+  setChartValue("showAspects", false);
+  setChartValue("showGauquelin", false);
+  setChartValue("showFixstar", false);
+  setChartValue("showCompass", false);
+  setChartValue("showHoriz", false);
+  setChartValue("singleWheel", false);
+  setChartValue("showMansions", false);
+  setChartValue("showAnnotations", false);
+  setChartValue("daySet", true);
+  setChartValue("timeAdjust", "2");
+  setChartValue("mountainPos", "0.0");
+  setChartValue("note", "");
+  currentTextPages = null;
+  updateAllDateTimeWidgets();
+  syncMenuCheckmarks();
+  renderEntries();
 }
 
 function updateAllDateTimeWidgets() {
@@ -827,6 +863,29 @@ function openImageSizeDialog() {
   });
 }
 
+function openFooterDialog() {
+  const container = document.createElement("div");
+  const note = document.createElement("textarea");
+  note.rows = 7;
+  note.value = chartField("note")?.value || "";
+  const printNotes = checkboxInput(settings.printNotes);
+  container.append(
+    dialogField("圖形註釋", note),
+    dialogField("列印時包含註釋", printNotes),
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "對應桌面版「列印及圖形註釋」，保存後會寫入目前資料的批註並重新繪盤。"
+    })
+  );
+  openBasicDialog("列印及圖形註釋", container, () => {
+    setChartValue("note", note.value);
+    settings.printNotes = printNotes.checked;
+    saveSettings();
+    notify("圖形註釋已保存", printNotes.checked ? "列印時會包含註釋。" : "列印時不額外包含註釋。");
+    scheduleCompute();
+  });
+}
+
 function buttonTitle(action) {
   return {
     "edit-life-palace": "修改命宮",
@@ -956,14 +1015,34 @@ function openSearchDialog(action) {
       setChartValue("mode", "western");
       setChartValue("astroMode", astroModeByAction[action]);
       syncMenuCheckmarks();
-      switchView("chart");
     } else if (action === "search-eight-time") {
       switchView("eight");
-    } else {
-      switchView("calculation");
     }
-    computePayload(formPayload()).catch((error) => showResult({ error: error.message }));
+    runSearchAction(action).catch((error) => showResult({ error: error.message }));
   });
+}
+
+async function runSearchAction(action) {
+  const payload = {
+    ...formPayload(),
+    searchAction: action,
+    searchDate: settings.searchStart || chartField("nowDate")?.value || chartField("birthDate")?.value || "2026-01-01",
+    searchMonths: String((settings.searchYears || 1) * 12)
+  };
+  const result = await postJson("/api/search/run", payload);
+  const text = result.searchText || result.message || "沒有搜尋結果。";
+  currentTextPages = {
+    ...(currentTextPages || {}),
+    calculation: text
+  };
+  resultNode.textContent = text;
+  textTabs.hidden = false;
+  if (action === "search-eight-time") {
+    await computePayload(formPayload());
+    switchView("eight");
+    return;
+  }
+  switchView("calculation");
 }
 
 function showChartResult(payload) {
@@ -1171,10 +1250,15 @@ function chartLayoutMetrics() {
 }
 
 async function computePayload(payload) {
+  window.clearTimeout(autoComputeTimer);
+  const requestId = ++computeRequestId;
   if (!currentTextPages) {
     resultNode.textContent = "正在計算...";
   }
   const chart = await postJson("/api/chart/compute", payload);
+  if (requestId !== computeRequestId) {
+    return chart;
+  }
   showChartResult(chart);
   console.info("Moira chart computed", compactChartPayload(chart));
   return chart;
@@ -1183,13 +1267,33 @@ async function computePayload(payload) {
 function scheduleCompute() {
   syncMenuCheckmarks();
   window.clearTimeout(autoComputeTimer);
+  const scheduledRequestId = ++computeRequestId;
   autoComputeTimer = window.setTimeout(() => {
-    computePayload(formPayload()).catch((error) => {
+    if (scheduledRequestId !== computeRequestId) {
+      return;
+    }
+    computePayloadForRequest(formPayload(), scheduledRequestId).catch((error) => {
+      if (scheduledRequestId !== computeRequestId) {
+        return;
+      }
       chartImage.hidden = true;
       emptyChart.hidden = false;
       showResult({ request: formPayload(), error: error.message });
     });
   }, 350);
+}
+
+async function computePayloadForRequest(payload, requestId) {
+  if (!currentTextPages) {
+    resultNode.textContent = "正在計算...";
+  }
+  const chart = await postJson("/api/chart/compute", payload);
+  if (requestId !== computeRequestId) {
+    return chart;
+  }
+  showChartResult(chart);
+  console.info("Moira chart computed", compactChartPayload(chart));
+  return chart;
 }
 
 function loadEntries() {
@@ -1515,12 +1619,17 @@ function runMenuAction(action) {
     append: importEntriesButton,
     save: exportMriButton,
     "save-as": exportEntriesButton,
-    new: saveEntryButton,
     delete: deleteEntryButton,
     update: updateEntryButton
   };
   if (actionMap[action]) {
     actionMap[action].click();
+    return;
+  }
+  if (action === "new") {
+    resetChartForm();
+    switchView("chart");
+    computePayload(formPayload()).catch((error) => showResult({ error: error.message }));
     return;
   }
   if (action === "focus-name") {
@@ -1533,9 +1642,7 @@ function runMenuAction(action) {
     return;
   }
   if (action === "print-notes") {
-    document.body.classList.add("print-with-notes");
-    window.print();
-    window.setTimeout(() => document.body.classList.remove("print-with-notes"), 500);
+    openFooterDialog();
     return;
   }
   if (action === "save-image") {

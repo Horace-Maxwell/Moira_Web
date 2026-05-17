@@ -54,7 +54,7 @@ grep -q '流年星法(&T)...' "$HTML_FILE"
 grep -q '現在時間(&N)' "$HTML_FILE"
 grep -q '操作說明(&O)' "$HTML_FILE"
 grep -q 'name="mode" type="hidden"' "$HTML_FILE"
-grep -q 'app-ui-native-71' "$HTML_FILE"
+grep -q 'app-ui-native-72' "$HTML_FILE"
 if grep -q 'class="titlebar"' "$HTML_FILE"; then
   echo "Unexpected legacy fake titlebar found in HTML." >&2
   exit 1
@@ -109,6 +109,17 @@ for mode in traditional pick western sidereal; do
       end
     '
 done
+
+curl --fail --silent \
+  --header 'Content-Type: application/json' \
+  --data '{"searchAction":"search-solar-eclipse","mode":"traditional","name":"DHX","sex":"male","birthDate":"2006-04-10","birthTime":"09:58","nowDate":"2026-05-17","nowTime":"09:00","country":"中国","city":"上海","zone":"Asia/Shanghai","searchDate":"2026-05-17","searchMonths":"12","imageWidth":"960","imageHeight":"720"}' \
+  "$BASE_URL/api/search/run" | ruby -rjson -e '
+    data = JSON.parse(STDIN.read)
+    unless data["status"] == "searched" && data["title"].to_s.include?("日")
+      warn "Search endpoint did not return a desktop-style result"
+      exit 1
+    end
+  '
 
 curl --fail --silent \
   --dump-header "$HEADERS_FILE" \

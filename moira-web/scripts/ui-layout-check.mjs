@@ -129,11 +129,53 @@ async function main() {
     assert(await page.locator("#optionDialogTitle").innerText() === "色彩設定", "Color settings dialog did not open");
     await page.locator("#optionDialog").getByText("Cancel").click();
 
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(2).locator("summary").hover();
+    const eightToggle = page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("四柱八字");
+    await eightToggle.click();
+    assert(await page.locator(".main-tabs .tab[data-view='eight']").isHidden(),
+      "項目顯示 should hide the 八字 tab immediately");
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(2).locator("summary").hover();
+    await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("四柱八字").click();
+    assert(await page.locator(".main-tabs .tab[data-view='eight']").isVisible(),
+      "項目顯示 should restore the 八字 tab immediately");
+
     await page.locator("details.menu").nth(4).locator(":scope > summary").click();
     await page.locator("details.menu:nth-of-type(5) > .menu-panel").getByText("流年星法").click();
     await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 3000 });
     assert(await page.locator("#optionDialogTitle").innerText() === "流年星法", "Search dialog did not open");
-    await page.locator("#optionDialog").getByText("Cancel").click();
+    await page.locator("#optionDialogOk").click();
+    await page.locator("#calculationView.active #resultBox").waitFor({ state: "visible", timeout: 15000 });
+    assert((await page.locator("#resultBox").innerText()).includes("流年星法"),
+      "Search OK should render a real result page");
+
+    await page.locator("details.menu").nth(5).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(6) > .menu-panel").getByText("星盘").click();
+    await page.locator("#chartView.active #chartImage:not([hidden])").waitFor({ state: "visible", timeout: 20000 });
+    const postMenuImageProbe = await page.locator("#chartImage").evaluate((img) => ({
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+      clientWidth: Math.round(img.getBoundingClientRect().width),
+      clientHeight: Math.round(img.getBoundingClientRect().height),
+      devicePixelRatio: Math.max(1, window.devicePixelRatio || 1)
+    }));
+    assert(postMenuImageProbe.naturalWidth >= Math.round(postMenuImageProbe.clientWidth * postMenuImageProbe.devicePixelRatio * 0.85),
+      `returning to chart from a menu page should not leave a low-res image: ${JSON.stringify(postMenuImageProbe)}`);
+    assert(postMenuImageProbe.naturalHeight >= Math.round(postMenuImageProbe.clientHeight * postMenuImageProbe.devicePixelRatio * 0.85),
+      `returning to chart from a menu page should not leave a low-res image: ${JSON.stringify(postMenuImageProbe)}`);
+
+    await page.locator("details.menu").nth(1).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(2) > .menu-panel").getByText("新增").click();
+    await page.locator("#chartView.active #chartImage:not([hidden])").waitFor({ state: "visible", timeout: 20000 });
+    assert(await page.locator("input[name='name']").inputValue() === "",
+      "File > 新增 should blank the current entry instead of adding a management row");
+
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(0).locator("summary").hover();
+    await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("占星盤").click();
+    const modeAfterMenu = await page.locator("input[name='mode']").inputValue();
+    assert(modeAfterMenu === "western", `選擇星盤 > 占星盤 should update mode, got ${modeAfterMenu}`);
 
     await page.keyboard.press("Escape");
     await page.locator(".main-tabs .tab[data-view='manage']").click();

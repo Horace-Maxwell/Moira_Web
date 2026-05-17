@@ -67,6 +67,7 @@ public final class MoiraWebServer {
         server.createContext("/api/features", route(this::features));
         server.createContext("/api/chart/preview", route(this::chartPreview));
         server.createContext("/api/chart/compute", route(this::computeChart));
+        server.createContext("/api/search/run", route(this::runSearch));
         server.createContext("/api/entries/pack", route(this::packEntry));
         server.createContext("/api/entries/unpack", route(this::unpackEntry));
         server.createContext("/api/datasets/export", route(this::exportDataSet));
@@ -169,6 +170,12 @@ public final class MoiraWebServer {
         ensureMethod(exchange, "POST");
         String body = new String(readBody(exchange), StandardCharsets.UTF_8);
         json(exchange, 200, bridge.computeChart(Json.parseStringObject(body)));
+    }
+
+    private void runSearch(HttpExchange exchange) throws IOException {
+        ensureMethod(exchange, "POST");
+        String body = new String(readBody(exchange), StandardCharsets.UTF_8);
+        json(exchange, 200, bridge.search(Json.parseStringObject(body)));
     }
 
     private void packEntry(HttpExchange exchange) throws IOException {

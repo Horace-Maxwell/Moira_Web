@@ -1,6 +1,7 @@
 package org.athomeprojects.moiraweb;
 
 import org.athomeprojects.base.AppRuntime;
+import org.athomeprojects.base.BaseCalendar;
 import org.athomeprojects.base.BaseMessage;
 import org.athomeprojects.base.ChartData;
 import org.athomeprojects.base.ChartMode;
@@ -23,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Base64;
@@ -102,6 +104,75 @@ final class HeadlessMoiraEngine {
         data.put("chartImage", "data:image/png;base64," + chartBase64);
         data.put("textPages", textPages(dataTab, poleTab, evalTab));
         data.put("resourceRoot", resourceRoot.toString());
+        return data;
+    }
+
+    synchronized Map<String, ?> search(Map<String, String> request) {
+        int chartMode = parseChartMode(value(request, "mode", "traditional"));
+        int astroMode = parseAstroMode(value(request, "astroMode", "natal"));
+        ChartMode.setChartMode(chartMode);
+        ChartMode.setAstroMode(astroMode);
+        applyRuntimePreferences(request);
+        applySearchPreferences(request);
+
+        HeadlessTextTab dataTab = new HeadlessTextTab();
+        HeadlessTextTab poleTab = new HeadlessTextTab();
+        HeadlessTextTab evalTab = new HeadlessTextTab();
+        ChartData chart = new ChartData(dataTab, poleTab, evalTab);
+        chart.setEpheMode(booleanValue(request, "moshierEphemeris", false));
+        chart.setShowNow(booleanValue(request, "showNow", true));
+        chart.setShowAspects(booleanValue(request, "showAspects",
+                chartMode == ChartMode.ASTRO_MODE));
+        chart.setShowGauquelin(booleanValue(request, "showGauquelin", false));
+        chart.setShowFixstar(booleanValue(request, "showFixstar", false));
+        chart.setShowHoriz(booleanValue(request, "showHoriz", false));
+        chart.setDaySet(booleanValue(request, "daySet", true));
+        chart.setNoColor(booleanValue(request, "noColor", false));
+        chart.setTimeAdjust(intValue(request, "timeAdjust",
+                Resource.getPrefInt("longitude_adjust")));
+        String mountainPos = value(request, "mountainPos", "");
+        if (!mountainPos.isEmpty()) {
+            chart.setMountainPos(mountainPos);
+        }
+
+        DataEntry entry = entryFromRequest(request);
+        String error = chart.compute(entry, entry, null, new DiagramTip());
+        if (error != null) {
+            throw new IllegalArgumentException(error);
+        }
+
+        String action = value(request, "searchAction", "search-transit");
+        String title = searchTitle(action);
+        String text;
+        String resultKind;
+        if ("search-eight-time".equals(action)) {
+            text = title + "\n\n" + poleTab.getText();
+            resultKind = "eight-characters";
+        } else if ("search-solar-eclipse".equals(action)
+                || "search-lunar-eclipse".equals(action)
+                || "search-sun-mountain".equals(action)) {
+            String modeName = searchModeName(action);
+            String[] data = chart.getSearchResult(entry.getCountry(),
+                    entry.getCity(), entry.getZone(), modeName,
+                    !"search-sun-mountain".equals(action));
+            text = searchHtmlText(data, title);
+            resultKind = modeName;
+        } else {
+            int transitMode = transitMode(action);
+            String[] data = chart.getTransitData(entry, entry.getCountry(),
+                    entry.getCity(), entry.getZone(), transitMode);
+            text = searchHtmlText(data, title);
+            resultKind = astroModeName(transitMode);
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("status", "searched");
+        data.put("action", action);
+        data.put("title", title);
+        data.put("kind", resultKind);
+        data.put("searchText", text == null || text.trim().isEmpty()
+                ? title + "\n\n沒有搜尋結果。" : text);
+        data.put("normalized", normalized(entry, request));
         return data;
     }
 
@@ -190,6 +261,102 @@ final class HeadlessMoiraEngine {
                 + "aspects_display", request);
         putIntArrayPreference("angleMarkerDisplay", "angle_marker_display",
                 request);
+    }
+
+    private void applySearchPreferences(Map<String, String> request) {
+        int months = boundedInt(request, "searchMonths", 12, 1, 1200);
+        String dateText = value(request, "searchDate", value(request,
+                "nowDate", LocalDate.now().toString()));
+        String timeText = value(request, "nowTime", trimSeconds(LocalTime.now()));
+        int[] date = parseDateTime(dateText, timeText);
+        String desktopDate = BaseCalendar.formatDate(date, false, false);
+        Resource.putPrefInt("search_forward", booleanValue(request,
+                "searchForward", true) ? 1 : 0);
+        Resource.putPrefString("search_date", desktopDate);
+        Resource.putPrefInt("search_period", months);
+        Resource.putPrefString("transit_date", desktopDate);
+        Resource.putPrefInt("transit_period", months);
+        Resource.putPrefDouble("search_degree", doubleValue(request,
+                "searchDegree", 0.0));
+        Resource.putPrefDouble("azimuth_max_speed", doubleValue(request,
+                "azimuthMaxSpeed", Resource.getDouble("azimuth_max_speed")));
+        Resource.putPrefInt("eclipse_solar_anywhere", booleanValue(request,
+                "eclipseSolarAnywhere", false) ? 1 : 0);
+    }
+
+    private String searchTitle(String action) {
+        switch (action) {
+        case "search-primary":
+            return "主限法";
+        case "search-secondary":
+            return "次限法";
+        case "search-solar-arc":
+            return "太陽弧角法";
+        case "search-sun-mountain":
+            return "動盤太陽到山時間";
+        case "search-eight-time":
+            return "八字時間";
+        case "search-solar-eclipse":
+            return "日蝕時間";
+        case "search-lunar-eclipse":
+            return "月蝕時間";
+        case "search-aspect":
+            return "相位";
+        default:
+            return "流年星法";
+        }
+    }
+
+    private String searchModeName(String action) {
+        if ("search-solar-eclipse".equals(action)) {
+            return "eclipse_solar";
+        }
+        if ("search-lunar-eclipse".equals(action)) {
+            return "eclipse_lunar";
+        }
+        return "azimuth";
+    }
+
+    private int transitMode(String action) {
+        switch (action) {
+        case "search-primary":
+            return ChartMode.PRIMARY_DIRECTION_MODE;
+        case "search-secondary":
+            return ChartMode.SECONDARY_PROGRESSION_MODE;
+        case "search-solar-arc":
+            return ChartMode.SOLAR_ARC_MODE;
+        case "search-aspect":
+            return ChartMode.NATAL_MODE;
+        default:
+            return ChartMode.TRANSIT_MODE;
+        }
+    }
+
+    private String searchHtmlText(String[] data, String fallbackTitle) {
+        if (data == null || data.length < 2 || data[1] == null) {
+            return fallbackTitle + "\n\n沒有搜尋結果。";
+        }
+        Path html = Path.of(data[1]);
+        try {
+            String source = Files.readString(html, StandardCharsets.UTF_8);
+            String text = source
+                    .replaceAll("(?is)<script.*?</script>", "")
+                    .replaceAll("(?is)<style.*?</style>", "")
+                    .replaceAll("(?i)</tr>", "\n")
+                    .replaceAll("(?i)</t[dh]>", "\t")
+                    .replaceAll("(?i)<br\\s*/?>", "\n")
+                    .replaceAll("(?is)<[^>]+>", "")
+                    .replace("&nbsp;", " ")
+                    .replace("&amp;", "&")
+                    .replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replaceAll("[ \\t]+\\n", "\n")
+                    .replaceAll("\\n{3,}", "\n\n")
+                    .trim();
+            return text.isEmpty() ? fallbackTitle + "\n\n沒有搜尋結果。" : text;
+        } catch (IOException ex) {
+            return fallbackTitle + "\n\n搜尋已完成，但無法讀取結果檔案。";
+        }
     }
 
     private void putIntArrayPreference(String requestKey, String prefKey,
@@ -465,6 +632,19 @@ final class HeadlessMoiraEngine {
         String val = request.get(key);
         return val == null || val.trim().isEmpty() ? fallback
                 : parseInt(val.trim(), key);
+    }
+
+    private double doubleValue(Map<String, String> request, String key,
+            double fallback) {
+        String val = request.get(key);
+        if (val == null || val.trim().isEmpty()) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(val.trim());
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
     }
 
     private int boundedInt(Map<String, String> request, String key, int fallback,
