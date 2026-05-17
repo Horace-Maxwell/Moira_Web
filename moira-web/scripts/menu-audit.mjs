@@ -79,9 +79,11 @@ async function clickSetControl(page, cascadeIndex, control, value, visitedContro
   await openOptionsCascade(page, cascadeIndex);
   const command = page.locator(`details.menu:nth-of-type(4) .menu-subpanel:visible [data-set-control="${control}"][data-set-value="${value}"]`);
   assert(await command.count() === 1, `Missing ${control}=${value}`);
+  const requestPromise = waitForCompute(page, (payload) => payload[control] === value, 30000, `${control}=${value}`);
   await command.click();
   visitedControls.add(`${control}=${value}`);
   assert(await inputValue(page, control) === value, `${control} did not change to ${value}`);
+  await requestPromise;
 }
 
 async function toggleFormCheckbox(page, name, visitedFormOptions, computePayloads) {
@@ -150,7 +152,28 @@ async function toggleViewPref(page, pref, visitedPrefs, afterToggle = null) {
   }
 }
 
-async function waitForCompute(page, predicate, timeout = 20000) {
+async function assertChartComputed(page, label) {
+  await page.waitForFunction(() => {
+    const image = document.querySelector("#chartImage");
+    const empty = document.querySelector("#emptyChart");
+    return image && empty && image.hidden === false && empty.hidden === true && image.src.length > 1000;
+  }, null, { timeout: 20000 });
+  const state = await page.evaluate(() => {
+    const image = document.querySelector("#chartImage");
+    const empty = document.querySelector("#emptyChart");
+    return {
+      imageHidden: image?.hidden,
+      emptyHidden: empty?.hidden,
+      naturalWidth: image?.naturalWidth,
+      naturalHeight: image?.naturalHeight,
+      srcLength: image?.src?.length || 0
+    };
+  });
+  assert(state.naturalWidth >= 360 && state.naturalHeight >= 360,
+    `${label} returned an undersized or empty chart image: ${JSON.stringify(state)}`);
+}
+
+async function waitForCompute(page, predicate, timeout = 20000, label = "compute") {
   const response = await page.waitForResponse((candidate) => {
     const request = candidate.request();
     if (request.method() !== "POST" || !candidate.url().includes("/api/chart/compute")) {
@@ -165,6 +188,9 @@ async function waitForCompute(page, predicate, timeout = 20000) {
   const payload = JSON.parse(response.request().postData() || "{}");
   const responseText = await response.text();
   assert(response.ok(), `Compute API failed with ${response.status()} for ${JSON.stringify(payload).slice(0, 800)}: ${responseText.slice(0, 800)}`);
+  assert(Number(payload.imageWidth) <= 5000 && Number(payload.imageHeight) <= 5000,
+    `${label} requested an oversized chart image: ${payload.imageWidth}x${payload.imageHeight}`);
+  await assertChartComputed(page, label);
   return payload;
 }
 
@@ -332,9 +358,9 @@ async function main() {
       await selectDialogOption(page, 1, "2");
     }, async () => waitForCompute(page, (payload) => payload.lifeMode === "1" && payload.selfMode === "2"));
 
-    await runDialogAction(page, MENU.edit, "edit-star-position", "修改星曜位置", visitedActions, null, async () => {
+    await runDialogAction(page, MENU.edit, "edit-star-position", "修改星曜位置", visitedActions, async () => {
       await page.locator("#optionDialog label", { hasText: "天" }).locator("input").check({ force: true });
-    });
+    }, async () => waitForCompute(page, (payload) => String(payload.signDisplay || "").split(",")[7] === "1", 30000, "edit-star-position"));
     assert((await localSettings(page)).selectedPlanets.includes("天"), "Edit > edit-star-position did not persist star list");
 
     await page.locator("input[name='name']").fill("abc中文def");
@@ -360,9 +386,15 @@ async function main() {
     assert(await inputValue(page, "name") === "", "Edit > delete-selection did not clear selected text");
     await clickMenuAction(page, MENU.edit, "undo", visitedActions);
     await clickMenuAction(page, MENU.edit, "redo", visitedActions);
-    await clickViewTarget(page, MENU.view, "calculation", visitedViews);
-    await clickMenuAction(page, MENU.edit, "select-all", visitedActions);
-    assert((await page.evaluate(() => String(window.getSelection()))).length > 20, "Edit > select-all did not select text page");
+    for (const view of ["calculation", "eight", "notes"]) {
+      await clickViewTarget(page, MENU.view, view, visitedViews);
+      await clickMenuAction(page, MENU.edit, "select-all", visitedActions);
+      const pageText = await page.locator(`#${view === "calculation" ? "resultBox" : view === "eight" ? "eightText" : "noteText"}`).innerText();
+      const selectedText = await page.evaluate(() => String(window.getSelection()));
+      assert(pageText.trim().length > 0, `${view} text page was empty before select-all`);
+      assert(selectedText.trim() === pageText.trim(),
+        `Edit > select-all did not select the ${view} text page`);
+    }
     await clickMenuAction(page, MENU.edit, "bold", visitedActions);
     await clickMenuAction(page, MENU.edit, "highlight", visitedActions);
 
@@ -462,6 +494,7 @@ async function main() {
     assert(await page.locator("body.monochrome-chart").count() === 1, "Options > color-settings did not apply monochrome");
 
     await togglePref(page, "monochrome", visitedPrefs, async (enabled) => {
+      await waitForCompute(page, (payload) => payload.noColor === String(enabled), 30000, "monochrome");
       assert(await page.locator("body.monochrome-chart").count() === (enabled ? 1 : 0), "Options > monochrome did not toggle body class");
     });
 
@@ -469,7 +502,9 @@ async function main() {
     assert(await page.locator("body.simplified-labels").count() === 1, "Options > toggle-language did not toggle body class");
     assert(await page.locator("html").getAttribute("lang") === "zh-CN", "Options > toggle-language did not update html lang");
 
+    const resetOptionsResponse = waitForCompute(page, (payload) => payload.noColor === "false" && payload.fontDirection === "vertical", 30000, "reset-options");
     await clickMenuAction(page, MENU.options, "reset-options", visitedActions);
+    await resetOptionsResponse;
     assert(!(await localSettings(page)).simplifiedLabels, "Options > reset-options did not reset language preference");
 
     for (const [action, title] of SEARCH_ACTIONS) {
@@ -490,10 +525,13 @@ async function main() {
     await clickMenuAction(page, MENU.search, "focus-name", visitedActions);
     assert(await page.locator("input[name='name']").evaluate((node) => document.activeElement === node), "Search > focus-name did not focus name");
 
-    await clickViewTarget(page, MENU.search, "manage", visitedViews);
-    await clickMenuAction(page, MENU.view, "set-current-time", visitedActions);
     const now = new Date();
-    assert(await inputValue(page, "nowDate") === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`, "View > set-current-time did not update date");
+    const expectedNowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    await clickViewTarget(page, MENU.search, "manage", visitedViews);
+    const currentTimeResponse = waitForCompute(page, (payload) => payload.nowDate === expectedNowDate, 30000, "set-current-time");
+    await clickMenuAction(page, MENU.view, "set-current-time", visitedActions);
+    await currentTimeResponse;
+    assert(await inputValue(page, "nowDate") === expectedNowDate, "View > set-current-time did not update date");
 
     await toggleViewPref(page, "highResolutionUi", visitedPrefs, async () => {
       await waitForCompute(page, (payload) => Number(payload.imageZoom) >= 200);
@@ -507,6 +545,34 @@ async function main() {
     await clickViewTarget(page, MENU.moira, "calculation", visitedViews);
     await clickViewTarget(page, MENU.help, "calculation", visitedViews);
     await clickViewTarget(page, MENU.help, "notes", visitedViews);
+
+    await clickViewTarget(page, MENU.view, "manage", visitedViews);
+    await page.locator("#saveEntry").click();
+    await page.locator("#entryTable tr").first().waitFor({ state: "visible", timeout: 5000 });
+    await page.evaluate(() => {
+      window.__moiraAudit.confirmMessages = [];
+      window.confirm = (message) => {
+        window.__moiraAudit.confirmMessages.push(message);
+        return true;
+      };
+    });
+    const closeSaveDownload = page.waitForEvent("download");
+    await clickMenuAction(page, MENU.file, "close-window", visitedActions);
+    assert((await closeSaveDownload).suggestedFilename().endsWith(".mri"),
+      "File > close-window should save an MRI file when dirty data is confirmed");
+    const closeAudit = await page.evaluate(() => window.__moiraAudit);
+    assert(closeAudit.confirmMessages.includes("数据已更改，储存档案？"),
+      `File > close-window did not show the dirty data prompt: ${JSON.stringify(closeAudit.confirmMessages)}`);
+    const exitRequested = await page.locator("body.app-exit-requested").count();
+    assert(closeAudit.closeCount > 0 || exitRequested === 1,
+      "File > close-window did not request browser window close after saving dirty data");
+    await page.evaluate(() => {
+      window.confirm = (message) => {
+        window.__moiraAudit.confirmMessages.push(message);
+        return false;
+      };
+      document.body.classList.remove("app-exit-requested");
+    });
 
     await togglePref(page, "minimizeToTray", visitedPrefs);
     await clickMenuAction(page, MENU.file, "close-window", visitedActions);

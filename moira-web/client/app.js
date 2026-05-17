@@ -60,6 +60,11 @@ const viewTitles = {
   notes: "星盤 - 批注",
   manage: "數據管理 - 回歸制"
 };
+const textPageFallbacks = {
+  calculation: "尚未生成計算資料。",
+  eightCharacters: "尚未計算八字資料。",
+  notes: "尚未生成批注資料。"
+};
 const PLANET_CHOICES = [
   "日", "月", "金", "木", "水", "火", "土", "天", "海", "冥", "計", "孛",
   "紫", "黃", "福", "升", "頂", "凱", "穀", "智", "婚", "灶"
@@ -490,7 +495,9 @@ function showTextPage(page) {
   if (!currentTextPages) {
     return;
   }
-  const text = currentTextPages[page] || "";
+  const text = currentTextPages[page]?.trim()
+    ? currentTextPages[page]
+    : (textPageFallbacks[page] || "");
   if (page === "eightCharacters") {
     eightTextNode.textContent = text;
   } else if (page === "notes") {
