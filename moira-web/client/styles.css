@@ -46,6 +46,44 @@ body.simplified-labels {
   --blue-text: #000088;
 }
 
+body.app-minimized .app-window,
+body.app-exit-requested .app-window {
+  filter: brightness(0.42);
+  pointer-events: none;
+  transform: scale(0.985);
+  transform-origin: center;
+}
+
+body.app-minimized::before,
+body.app-exit-requested::before {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 999;
+  width: min(420px, calc(100vw - 40px));
+  border: 1px solid #111;
+  border-radius: 8px;
+  padding: 22px;
+  color: #f4f4f4;
+  background: rgba(46, 46, 45, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+body.app-minimized::before {
+  content: "Moira 已縮小\A瀏覽器沒有系統匣，點擊頁面任意位置即可恢復。";
+  white-space: pre-line;
+}
+
+body.app-exit-requested::before {
+  content: "Moira 已完成退出流程\A瀏覽器阻止直接關閉分頁，現在可以手動關閉此頁。";
+  white-space: pre-line;
+}
+
 button,
 input,
 select,

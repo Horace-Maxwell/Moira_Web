@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-73">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-74">
 </head>
 <body>
   <div class="app-window">
@@ -331,19 +331,19 @@
     </main>
 
     <footer class="bottom-toolbar">
-      <button id="importMri" type="button">開啟</button>
-      <button id="importEntries" type="button">加入</button>
-      <button id="exportMri" type="button">存檔</button>
-      <button id="exportEntries" type="button">另存新檔</button>
-      <button class="nudge-button" type="button" aria-label="上一列">▲</button>
-      <button class="nudge-button" type="button" aria-label="下一列">▼</button>
-      <button id="saveEntry" type="button">新增</button>
-      <button id="deleteEntry" type="button">刪除</button>
-      <button id="updateEntry" type="button">更新</button>
+      <button id="importMri" type="button" data-toolbar-group="file">開啟</button>
+      <button id="importEntries" type="button" data-toolbar-group="file">加入</button>
+      <button id="exportMri" type="button" data-toolbar-group="file">存檔</button>
+      <button id="exportEntries" type="button" data-toolbar-group="file">另存新檔</button>
+      <button class="nudge-button" type="button" aria-label="上一列" data-toolbar-group="options">▲</button>
+      <button class="nudge-button" type="button" aria-label="下一列" data-toolbar-group="options">▼</button>
+      <button id="saveEntry" type="button" data-toolbar-group="edit">新增</button>
+      <button id="deleteEntry" type="button" data-toolbar-group="edit">刪除</button>
+      <button id="updateEntry" type="button" data-toolbar-group="edit">更新</button>
       <button id="packEntry" type="button" hidden>Legacy DataEntry</button>
       <input id="mriFile" type="file" accept=".mri" hidden>
       <input id="textImportFile" type="file" accept=".txt,.text,.ini,.conf,.prop,.json" hidden>
-      <input class="archive-name" aria-label="資料檔名稱">
+      <input class="archive-name" aria-label="資料檔名稱" data-toolbar-group="search">
       <span class="toolbar-spacer"></span>
       <span id="rowCount">0 列</span>
     </footer>
@@ -373,6 +373,6 @@
     </form>
   </dialog>
 
-  <script src="/app.js?v=app-ui-native-73"></script>
+  <script src="/app.js?v=app-ui-native-74"></script>
 </body>
 </html>

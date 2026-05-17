@@ -187,6 +187,8 @@ function applySettings() {
   document.body.classList.toggle("monochrome-chart", Boolean(settings.monochrome));
   document.body.classList.toggle("high-resolution-ui", Boolean(settings.highResolutionUi));
   document.body.classList.toggle("simplified-labels", Boolean(settings.simplifiedLabels));
+  document.body.classList.toggle("minimize-to-tray", Boolean(settings.minimizeToTray));
+  document.body.style.fontFamily = `"${settings.interfaceFont || defaultSettings.interfaceFont}", "Helvetica Neue", Arial, sans-serif`;
   document.querySelectorAll("[data-pref]").forEach((input) => {
     input.checked = Boolean(settings[input.dataset.pref]);
   });
@@ -195,9 +197,23 @@ function applySettings() {
     input.checked = settings[key] !== false;
   });
   applyTabVisibility();
+  applyToolbarVisibility();
   if (settings.themeColor) {
     document.documentElement.style.setProperty("--chrome", settings.themeColor);
   }
+}
+
+function applyToolbarVisibility() {
+  const toolbarGroups = {
+    file: "toolbarFile",
+    edit: "toolbarEdit",
+    options: "toolbarOptions",
+    search: "toolbarSearch"
+  };
+  document.querySelectorAll("[data-toolbar-group]").forEach((element) => {
+    const settingName = toolbarGroups[element.dataset.toolbarGroup];
+    element.hidden = settingName ? settings[settingName] === false : false;
+  });
 }
 
 function updateSetting(name, value) {
@@ -1240,7 +1256,10 @@ function formPayload() {
   const formData = chartValues();
   const mode = formData.mode || "traditional";
   const layout = chartLayoutMetrics();
-  const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
+  const devicePixelRatio = Math.max(1, window.devicePixelRatio || 1);
+  const pixelRatio = settings.highResolutionUi
+    ? Math.max(devicePixelRatio, 2)
+    : devicePixelRatio;
   const layoutWidth = layout.width;
   const layoutHeight = layout.height;
   const reservedWidth = layout.reservedWidth;
@@ -1699,7 +1718,7 @@ document.querySelectorAll("[data-pref]").forEach((input) => {
   input.addEventListener("change", () => {
     updateSetting(input.dataset.pref, input.checked);
     notify("選項已更新", input.closest("label")?.textContent.trim() || input.dataset.pref);
-    if (input.dataset.pref === "monochrome") {
+    if (["monochrome", "highResolutionUi"].includes(input.dataset.pref)) {
       scheduleCompute();
     }
     closeMenus();
@@ -1997,10 +2016,28 @@ async function attemptCloseWindow() {
       return;
     }
   }
+  if (settings.minimizeToTray) {
+    showMinimizedState();
+    return;
+  }
   window.close();
   if (!window.closed) {
     document.body.classList.add("app-exit-requested");
   }
+}
+
+function showMinimizedState() {
+  document.body.classList.add("app-minimized");
+  notify("Moira 已縮小", "瀏覽器不能寫入系統匣；點擊頁面任意位置即可恢復。");
+  window.setTimeout(() => {
+    const restore = () => {
+      document.body.classList.remove("app-minimized");
+      document.removeEventListener("pointerdown", restore, true);
+      document.removeEventListener("keydown", restore, true);
+    };
+    document.addEventListener("pointerdown", restore, true);
+    document.addEventListener("keydown", restore, true);
+  }, 0);
 }
 
 menuCommands.forEach((button) => {
@@ -2533,9 +2570,6 @@ document.addEventListener("keydown", (event) => {
 });
 
 applySettings();
-if (settings.interfaceFont) {
-  document.body.style.fontFamily = `"${settings.interfaceFont}", "Helvetica Neue", Arial, sans-serif`;
-}
 renderEntries();
 populateMonthSelects();
 wireDateTimeWidgets();

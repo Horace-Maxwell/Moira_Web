@@ -54,6 +54,8 @@ async function main() {
     await page.locator("#chartImage:not([hidden])").waitFor({ state: "visible", timeout: 20000 });
 
     assert(await page.title() === "七政四餘星盤 - Moira", "Unexpected page title");
+    const assetStamp = await page.locator("link[rel='stylesheet']").getAttribute("href");
+    assert(assetStamp.includes("app-ui-native-74"), `Unexpected asset cache stamp: ${assetStamp}`);
     assert(messages.length === 0, `Browser console had errors:\n${messages.join("\n")}`);
     const menubarText = await page.locator(".menubar").innerText();
     ["檔案(&F)", "編輯(&E)", "選項(&P)", "搜索(&S)", "檢視(&V)", "說明(&H)"].forEach((label) => {
@@ -226,6 +228,35 @@ async function main() {
     assert(/[名]?[稱称]/.test(manageHeaders) && /出生[時时]間/.test(manageHeaders),
       `manage table headers should be visible, got ${manageHeaders}`);
     assert(manageTable.width >= 1100, `manage table should span the desktop-style page, got ${manageTable.width}`);
+
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(3).locator("summary").hover();
+    await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("檔案圖示").click();
+    assert(await page.locator("#importMri").isHidden() && await page.locator("#exportMri").isHidden(),
+      "工具列顯示 > 檔案圖示 should hide file toolbar buttons in management view");
+    assert(await page.locator("#saveEntry").isVisible(),
+      "工具列顯示 > 檔案圖示 should not hide edit toolbar buttons");
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) details.menu-cascade").nth(3).locator("summary").hover();
+    await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("檔案圖示").click();
+    assert(await page.locator("#importMri").isVisible() && await page.locator("#exportMri").isVisible(),
+      "工具列顯示 > 檔案圖示 should restore file toolbar buttons");
+
+    await page.locator("details.menu").nth(5).locator(":scope > summary").click();
+    const highResRequest = page.waitForRequest((request) => {
+      if (request.method() !== "POST" || !request.url().includes("/api/chart/compute")) {
+        return false;
+      }
+      try {
+        return Number(JSON.parse(request.postData() || "{}").imageZoom) >= 200;
+      } catch {
+        return false;
+      }
+    }, { timeout: 15000 });
+    await page.locator("details.menu:nth-of-type(6) > .menu-panel").getByText("高解析度使用者介面").click();
+    await highResRequest;
+    assert(await page.locator("body.high-resolution-ui").count() === 1,
+      "檢視 > 高解析度使用者介面 should update body state and trigger a high-density chart request");
 
     console.log(`UI layout check passed for ${baseUrl}`);
   } finally {
