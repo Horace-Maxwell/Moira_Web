@@ -32,12 +32,22 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const messages = [];
+  const computePayloads = [];
   page.on("console", (message) => {
     if (["error", "warning"].includes(message.type())) {
       messages.push(`${message.type()}: ${message.text()}`);
     }
   });
   page.on("pageerror", (error) => messages.push(`pageerror: ${error.message}`));
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/api/chart/compute")) {
+      try {
+        computePayloads.push(JSON.parse(request.postData() || "{}"));
+      } catch {
+        computePayloads.push({});
+      }
+    }
+  });
 
   try {
     await page.goto(baseUrl, { waitUntil: "networkidle" });
@@ -176,6 +186,38 @@ async function main() {
     await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible").getByText("占星盤").click();
     const modeAfterMenu = await page.locator("input[name='mode']").inputValue();
     assert(modeAfterMenu === "western", `選擇星盤 > 占星盤 should update mode, got ${modeAfterMenu}`);
+    await page.waitForTimeout(800);
+
+    await page.locator("details.menu").nth(3).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(4) > .menu-panel").getByText("選擇星曜(&I)...").click();
+    await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 3000 });
+    assert((await page.locator("#optionDialogBody").innerText()).includes("強勢角距"),
+      "Western planet dialog should expose strength influence controls");
+    const chironCheckbox = page.locator("#optionDialog label", { hasText: "凱" }).locator("input[type='checkbox']").first();
+    await chironCheckbox.check();
+    const transitMoonCheckbox = page
+      .locator("#optionDialog fieldset", { hasText: "流年納入計算" })
+      .locator("label", { hasText: "月" })
+      .locator("input[type='checkbox']")
+      .first();
+    await transitMoonCheckbox.check();
+    const planetRequest = page.waitForRequest((request) => (
+      request.method() === "POST"
+      && request.url().includes("/api/chart/compute")
+      && (request.postData() || "").includes("astroSignDisplay")
+    ), { timeout: 15000 });
+    await page.locator("#optionDialogOk").click();
+    const planetPayload = JSON.parse((await planetRequest).postData() || "{}");
+    const astroDisplay = String(planetPayload.astroSignDisplay || "").split(",");
+    const transitDisplay = String(planetPayload.transitSignDisplay || "").split(",");
+    assert(astroDisplay[17] === "1",
+      `選擇星曜 should include checked Chiron in astro_sign_display, got ${planetPayload.astroSignDisplay}`);
+    assert(transitDisplay[1] === "1",
+      `流年納入計算 should include checked Moon in transit_sign_display, got ${planetPayload.transitSignDisplay}`);
+    assert(planetPayload.trueAsNorth !== undefined && planetPayload.nightFortuneMode !== undefined,
+      "Planet dialog should send node and fortune preferences to the backend");
+    assert(computePayloads.some((payload) => String(payload.astroSignDisplay || "").split(",")[17] === "1"),
+      "Captured compute requests should include the updated astrology planet list");
 
     await page.keyboard.press("Escape");
     await page.locator(".main-tabs .tab[data-view='manage']").click();

@@ -31,6 +31,8 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class HeadlessMoiraEngine {
     private static final int DEFAULT_WIDTH = 1180;
@@ -197,7 +199,8 @@ final class HeadlessMoiraEngine {
         AppRuntime.init(MoiraWebServer.class, resourceRoot.toString());
         Message.setMessage(new BaseMessage() {
         });
-        new Resource(null, "simplified", preferredFontName(), null, null);
+        new Resource(MoiraWebServer.class, "simplified", preferredFontName(),
+                null, null);
         ChartMode.initChartMode();
         City.loadCities("cities.prop");
     }
@@ -211,56 +214,85 @@ final class HeadlessMoiraEngine {
     }
 
     private void applyRuntimePreferences(Map<String, String> request) {
-        boolean showFixstar = booleanValue(request, "showFixstar", false);
-        boolean showCompass = booleanValue(request, "showCompass", false);
+        boolean showFixstar = booleanValue(request, "showFixstar",
+                Resource.getInt("enable_fixstar") != 0);
+        boolean showCompass = booleanValue(request, "showCompass",
+                Resource.getInt("show_compass") != 0);
         boolean verticalText = "vertical".equalsIgnoreCase(value(request,
                 "fontDirection", "vertical"));
         Resource.putPrefInt("show_compass", showCompass ? 1 : 0);
         Resource.putPrefInt("enable_fixstar", showFixstar ? 1 : 0);
         Resource.putPrefInt("explain_star", booleanValue(request,
-                "showAnnotations", false) ? 1 : 0);
+                "showAnnotations", Resource.getInt("explain_star") != 0)
+                        ? 1 : 0);
         Resource.putPrefInt("display_vertical_text", verticalText ? 1 : 0);
         Resource.putPrefInt("image_vertical_text", verticalText ? 1 : 0);
         Resource.putPrefInt("show_house_system", booleanValue(request,
-                "showHouseSystem", false) ? 1 : 0);
+                "showHouseSystem", Resource.getInt("show_house_system") != 0)
+                        ? 1 : 0);
         Resource.putPrefInt("show_style", booleanValue(request,
-                "showStyle", true) ? 1 : 0);
+                "showStyle", Resource.getInt("show_style") != 0) ? 1 : 0);
         Resource.putPrefInt("style_level", boundedInt(request, "styleLevel",
-                Resource.getPrefInt("style_level"), 0, 9));
+                Resource.getInt("style_level"), 0, 9));
         Resource.putPrefInt("show_angle_marker", booleanValue(request,
-                "showAngleMarker", false) ? 1 : 0);
+                "showAngleMarker", Resource.getInt("show_angle_marker") != 0)
+                        ? 1 : 0);
+        Resource.putPrefInt("true_as_north", booleanValue(request,
+                "trueAsNorth", Resource.getInt("true_as_north") != 0)
+                        ? 1 : 0);
+        Resource.putPrefInt("night_fortune_mode", booleanValue(request,
+                "nightFortuneMode",
+                Resource.getInt("night_fortune_mode") != 0) ? 1 : 0);
+        Resource.putPrefInt("topocentric", booleanValue(request, "topocentric",
+                Resource.getInt("topocentric") != 0) ? 1 : 0);
+        Resource.putPrefInt("altitude", boundedInt(request, "altitude",
+                Resource.getInt("altitude"), -12000, 50000));
+        Resource.putPrefDouble("asc_influence", boundedDouble(request,
+                "ascInfluence", Resource.getDouble("asc_influence"), 0.0,
+                30.0));
+        Resource.putPrefDouble("mc_influence", boundedDouble(request,
+                "mcInfluence", Resource.getDouble("mc_influence"), 0.0,
+                30.0));
         Resource.putPrefInt("life_mode", boundedInt(request, "lifeMode",
-                Resource.getPrefInt("life_mode"), 0, 9));
+                Resource.getInt("life_mode"), 0, 9));
         Resource.putPrefInt("self_mode", boundedInt(request, "selfMode",
-                Resource.getPrefInt("self_mode"), 0, 9));
+                Resource.getInt("self_mode"), 0, 9));
         Resource.putPrefInt("pick_sidereal_mode", booleanValue(request,
-                "pickSiderealMode", false) ? 1 : 0);
+                "pickSiderealMode",
+                Resource.getInt("pick_sidereal_mode") != 0) ? 1 : 0);
         Resource.putPrefInt("pick_house_mode", booleanValue(request,
-                "pickHouseMode", false) ? 1 : 0);
+                "pickHouseMode", Resource.getInt("pick_house_mode") != 0)
+                        ? 1 : 0);
         Resource.putPrefInt("pick_adjust_mode", booleanValue(request,
-                "pickAdjustMode", false) ? 1 : 0);
+                "pickAdjustMode", Resource.getInt("pick_adjust_mode") != 0)
+                        ? 1 : 0);
         Resource.putPrefInt("house_system_index", boundedInt(request,
-                "houseSystemIndex", Resource.getPrefInt("house_system_index"),
+                "houseSystemIndex", Resource.getInt("house_system_index"),
                 0, 10));
         Resource.putPrefInt("pick_house_system_index", boundedInt(request,
                 "pickHouseSystemIndex",
-                Resource.getPrefInt("pick_house_system_index"), 0, 10));
+                Resource.getInt("pick_house_system_index"), 0, 10));
         boolean siderealMode = booleanValue(request, "astroSystemMode",
                 "sidereal".equalsIgnoreCase(value(request, "zodiacMode", "")));
         Resource.putPrefInt("astro_system_mode", siderealMode ? 1 : 0);
         Resource.putPrefInt("astro_sidereal_index", boundedInt(request,
                 "astroSiderealIndex",
-                Resource.getPrefInt("astro_sidereal_index"), 0, 20));
+                Resource.getInt("astro_sidereal_index"), 0, 20));
         Resource.putPrefInt("degree_mode", "sidereal".equalsIgnoreCase(value(
                 request, "zodiacMode", "")) ? ChartMode.ZODIAC_MODE
                         : ChartMode.MOUNTAIN_MODE);
-        putIntArrayPreference("signDisplay", (ChartMode
-                .isChartMode(ChartMode.ASTRO_MODE) ? "astro_" : "")
-                + "sign_display", request);
-        putIntArrayPreference("aspectDisplay", ChartMode.getModePrefix()
-                + "aspects_display", request);
+        putIntArrayPreference("signDisplay", "sign_display", request,
+                Resource.getIntArray("sign_display"));
+        putIntArrayPreference("astroSignDisplay", "astro_sign_display",
+                request, Resource.getIntArray("astro_sign_display"));
+        putIntArrayPreference("transitSignDisplay", "transit_sign_display",
+                request, Resource.getIntArray("transit_sign_display"));
+        String aspectDisplayKey = ChartMode.getModePrefix()
+                + "aspects_display";
+        putIntArrayPreference("aspectDisplay", aspectDisplayKey, request,
+                resourceIntArray(aspectDisplayKey, "aspects_display"));
         putIntArrayPreference("angleMarkerDisplay", "angle_marker_display",
-                request);
+                request, Resource.getIntArray("angle_marker_display"));
     }
 
     private void applySearchPreferences(Map<String, String> request) {
@@ -339,7 +371,7 @@ final class HeadlessMoiraEngine {
         Path html = Path.of(data[1]);
         try {
             String source = Files.readString(html, StandardCharsets.UTF_8);
-            String text = source
+            String text = decodeHtmlEntities(source
                     .replaceAll("(?is)<script.*?</script>", "")
                     .replaceAll("(?is)<style.*?</style>", "")
                     .replaceAll("(?i)</tr>", "\n")
@@ -349,7 +381,7 @@ final class HeadlessMoiraEngine {
                     .replace("&nbsp;", " ")
                     .replace("&amp;", "&")
                     .replace("&lt;", "<")
-                    .replace("&gt;", ">")
+                    .replace("&gt;", ">"))
                     .replaceAll("[ \\t]+\\n", "\n")
                     .replaceAll("\\n{3,}", "\n\n")
                     .trim();
@@ -359,12 +391,48 @@ final class HeadlessMoiraEngine {
         }
     }
 
+    private String decodeHtmlEntities(String text) {
+        Matcher matcher = Pattern.compile("&#(x[0-9a-fA-F]+|[0-9]+);")
+                .matcher(text);
+        StringBuffer decoded = new StringBuffer();
+        while (matcher.find()) {
+            String token = matcher.group(1);
+            int radix = token.charAt(0) == 'x' || token.charAt(0) == 'X'
+                    ? 16 : 10;
+            String code = radix == 16 ? token.substring(1) : token;
+            matcher.appendReplacement(decoded, Matcher.quoteReplacement(
+                    htmlEntity(code, radix)));
+        }
+        matcher.appendTail(decoded);
+        return decoded.toString();
+    }
+
+    private String htmlEntity(String code, int radix) {
+        try {
+            return new String(Character.toChars(Integer.parseInt(code, radix)));
+        } catch (IllegalArgumentException ex) {
+            return "";
+        }
+    }
+
     private void putIntArrayPreference(String requestKey, String prefKey,
             Map<String, String> request) {
+        putIntArrayPreference(requestKey, prefKey, request, null);
+    }
+
+    private void putIntArrayPreference(String requestKey, String prefKey,
+            Map<String, String> request, int[] fallback) {
         int[] array = intArrayValue(request.get(requestKey));
+        if (array == null && fallback != null) {
+            array = fallback;
+        }
         if (array != null) {
             Resource.putPrefIntArray(prefKey, array);
         }
+    }
+
+    private int[] resourceIntArray(String key, String fallbackKey) {
+        return Resource.getIntArray(Resource.hasKey(key) ? key : fallbackKey);
     }
 
     private int[] intArrayValue(String value) {
@@ -645,6 +713,16 @@ final class HeadlessMoiraEngine {
         } catch (NumberFormatException ex) {
             return fallback;
         }
+    }
+
+    private double boundedDouble(Map<String, String> request, String key,
+            double fallback, double min, double max) {
+        double value = doubleValue(request, key, fallback);
+        if (value < min || value > max) {
+            throw new IllegalArgumentException(key + " must be between " + min
+                    + " and " + max + ".");
+        }
+        return value;
     }
 
     private int boundedInt(Map<String, String> request, String key, int fallback,

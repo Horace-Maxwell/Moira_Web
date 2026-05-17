@@ -61,8 +61,28 @@ const PLANET_CHOICES = [
   "日", "月", "金", "木", "水", "火", "土", "天", "海", "冥", "計", "孛",
   "紫", "黃", "福", "升", "頂", "凱", "穀", "智", "婚", "灶"
 ];
-const DEFAULT_SIGN_DISPLAY = [
+const TRADITIONAL_SIGN_DISPLAY_DEFAULT = [
   1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, -1, -1, -1, -1, -1
+];
+const ASTRO_SIGN_DISPLAY_DEFAULT = [
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, -1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+];
+const TRANSIT_SIGN_DISPLAY_DEFAULT = [1, 0, 1, 1, 1, 1, 1, 1, 1, 1];
+const TRADITIONAL_SIGN_ORDER = PLANET_CHOICES.map((_, index) => index);
+const ASTRO_SIGN_ORDER = [0, 1, 4, 2, 5, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20, 21, 15, 16];
+const TRANSIT_PLANET_CHOICES = PLANET_CHOICES.slice(0, TRANSIT_SIGN_DISPLAY_DEFAULT.length);
+const HOUSE_SYSTEM_CHOICES = [
+  ["0", "Placidus"],
+  ["1", "Koch"],
+  ["2", "Porphyrius"],
+  ["3", "Regiomontanus"],
+  ["4", "Campanus"],
+  ["5", "Equal"],
+  ["6", "Vehlow"],
+  ["7", "Meridian"],
+  ["8", "Horizontal"],
+  ["9", "Topocentric"],
+  ["10", "Alcabitius"]
 ];
 const defaultSettings = {
   toolbarFile: true,
@@ -87,6 +107,12 @@ const defaultSettings = {
   showStyle: true,
   styleLevel: 3,
   showAngleMarker: false,
+  trueAsNorth: true,
+  nightFortuneMode: true,
+  topocentric: false,
+  altitude: 0,
+  ascInfluence: 10,
+  mcInfluence: 10,
   houseSystemIndex: "0",
   pickHouseSystemIndex: "3",
   astroSystemMode: false,
@@ -98,7 +124,9 @@ const defaultSettings = {
   pickAdjustMode: false,
   synastryMode: "comparison",
   selectedSpirits: ["神煞註釋"],
-  selectedPlanets: ["日", "月", "金", "木", "水", "火", "土", "計", "孛", "紫", "黃"],
+  selectedPlanets: selectionFromSignDisplay(TRADITIONAL_SIGN_DISPLAY_DEFAULT),
+  astroSelectedPlanets: selectionFromSignDisplay(ASTRO_SIGN_DISPLAY_DEFAULT),
+  transitSelectedPlanets: selectionFromTransitDisplay(TRANSIT_SIGN_DISPLAY_DEFAULT),
   selectedAspects: ["合", "刑", "沖", "拱", "半合"],
   selectedAngleMarkers: ["合", "刑", "拱"],
   houseSystem: "Placidus",
@@ -350,7 +378,7 @@ function resetChartForm() {
   setChartValue("showHoriz", false);
   setChartValue("singleWheel", false);
   setChartValue("showMansions", false);
-  setChartValue("showAnnotations", false);
+  setChartValue("showAnnotations", true);
   setChartValue("daySet", true);
   setChartValue("timeAdjust", "2");
   setChartValue("mountainPos", "0.0");
@@ -616,6 +644,115 @@ function openComputedChecklist(title, settingName, choices, note) {
   openStoredChecklist(title, settingName, choices, note || "這些選項會立即參與下一次盤面計算。");
 }
 
+function radioInput(name, value, checked) {
+  const input = document.createElement("input");
+  input.type = "radio";
+  input.name = name;
+  input.value = value;
+  input.checked = Boolean(checked);
+  return input;
+}
+
+function groupedFieldset(title, children) {
+  const fieldset = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = title;
+  fieldset.append(legend, ...children);
+  return fieldset;
+}
+
+function openPlanetDialog(title = "選擇星曜") {
+  const setting = currentPlanetSetting();
+  const planetChoices = planetChoicesForMode(setting);
+  const container = document.createElement("div");
+  const [planetGrid, collectPlanets] = checkGrid("星曜選擇", settings[setting.settingName] || [], planetChoices, (values) => {
+    settings[setting.settingName] = values;
+  });
+  const [transitGrid, collectTransitPlanets] = checkGrid(
+    "流年納入計算",
+    settings.transitSelectedPlanets || [],
+    TRANSIT_PLANET_CHOICES,
+    (values) => {
+      settings.transitSelectedPlanets = values;
+    }
+  );
+  const nightFortune = checkboxInput(settings.nightFortuneMode);
+  const trueNorth = radioInput("trueNodeMode", "north", settings.trueAsNorth !== false);
+  const trueSouth = radioInput("trueNodeMode", "south", settings.trueAsNorth === false);
+  const geocentric = radioInput("siteMode", "geo", !settings.topocentric);
+  const topocentric = radioInput("siteMode", "topo", settings.topocentric);
+  const altitude = numberInput(settings.altitude ?? 0, -12000, 50000);
+  const showHouseSystem = checkboxInput(settings.showHouseSystem);
+  const houseSystemIndex = selectInput(settings.houseSystemIndex, HOUSE_SYSTEM_CHOICES);
+  const pickHouseSystemIndex = selectInput(settings.pickHouseSystemIndex, HOUSE_SYSTEM_CHOICES);
+  const ascInfluence = numberInput(settings.ascInfluence ?? 10, 0, 30);
+  const mcInfluence = numberInput(settings.mcInfluence ?? 10, 0, 30);
+  const syncAltitude = () => {
+    altitude.disabled = !topocentric.checked;
+  };
+  geocentric.addEventListener("change", syncAltitude);
+  topocentric.addEventListener("change", syncAltitude);
+  syncAltitude();
+
+  container.className = "planet-dialog";
+  container.append(
+    planetGrid,
+    dialogField("晚上使用夜福點", nightFortune),
+    groupedFieldset("計羅選擇", [
+      dialogField("計北羅南", trueNorth),
+      dialogField("計南羅北", trueSouth)
+    ]),
+    groupedFieldset("計算地點選擇", [
+      dialogField("地心", geocentric),
+      dialogField("地面", topocentric),
+      dialogField("海拔（米）", altitude)
+    ])
+  );
+  if (setting.mode !== "western") {
+    container.append(
+      groupedFieldset("分宮制選擇", [
+        dialogField("顯示十二宮", showHouseSystem),
+        dialogField(setting.mode === "pick" ? "擇日分宮制" : "命盤分宮制", setting.mode === "pick" ? pickHouseSystemIndex : houseSystemIndex)
+      ])
+    );
+  } else {
+    container.append(
+      groupedFieldset("強勢角距", [
+        dialogField("升", ascInfluence),
+        dialogField("頂", mcInfluence)
+      ])
+    );
+  }
+  container.append(
+    transitGrid,
+    Object.assign(document.createElement("p"), {
+      className: "dialog-note",
+      textContent: "這裡會直接寫入 legacy 計算偏好：傳統盤、占星盤與流年計算分別保存，不再只改前端顯示。"
+    })
+  );
+  openBasicDialog(title, container, () => {
+    collectPlanets();
+    collectTransitPlanets();
+    settings.nightFortuneMode = nightFortune.checked;
+    settings.trueAsNorth = trueNorth.checked;
+    settings.topocentric = topocentric.checked;
+    settings.altitude = boundedNumber(altitude.value, settings.altitude || 0, -12000, 50000);
+    settings.showHouseSystem = showHouseSystem.checked;
+    if (setting.mode === "pick") {
+      settings.pickHouseSystemIndex = pickHouseSystemIndex.value;
+    } else if (setting.mode !== "western") {
+      settings.houseSystemIndex = houseSystemIndex.value;
+      settings.houseSystem = houseSystemIndex.options[houseSystemIndex.selectedIndex]?.textContent || "Placidus";
+    } else {
+      settings.ascInfluence = boundedNumber(ascInfluence.value, settings.ascInfluence || 10, 0, 30);
+      settings.mcInfluence = boundedNumber(mcInfluence.value, settings.mcInfluence || 10, 0, 30);
+    }
+    saveSettings();
+    notify(`${title}已保存`, "星曜、流年星曜與計算偏好會參與下一次繪盤。");
+    scheduleCompute();
+  });
+}
+
 function openTextInfo(title, message) {
   const container = document.createElement("div");
   const paragraph = document.createElement("p");
@@ -658,32 +795,8 @@ function openLifeBodyDialog() {
 function openHouseSystemDialog() {
   const container = document.createElement("div");
   const showHouseSystem = checkboxInput(settings.showHouseSystem);
-  const houseSystemIndex = selectInput(settings.houseSystemIndex, [
-    ["0", "Placidus"],
-    ["1", "Koch"],
-    ["2", "Porphyrius"],
-    ["3", "Regiomontanus"],
-    ["4", "Campanus"],
-    ["5", "Equal"],
-    ["6", "Vehlow"],
-    ["7", "Meridian"],
-    ["8", "Horizontal"],
-    ["9", "Topocentric"],
-    ["10", "Alcabitius"]
-  ]);
-  const pickHouseSystemIndex = selectInput(settings.pickHouseSystemIndex, [
-    ["0", "Placidus"],
-    ["1", "Koch"],
-    ["2", "Porphyrius"],
-    ["3", "Regiomontanus"],
-    ["4", "Campanus"],
-    ["5", "Equal"],
-    ["6", "Vehlow"],
-    ["7", "Meridian"],
-    ["8", "Horizontal"],
-    ["9", "Topocentric"],
-    ["10", "Alcabitius"]
-  ]);
+  const houseSystemIndex = selectInput(settings.houseSystemIndex, HOUSE_SYSTEM_CHOICES);
+  const pickHouseSystemIndex = selectInput(settings.pickHouseSystemIndex, HOUSE_SYSTEM_CHOICES);
   container.append(
     dialogField("顯示十二宮", showHouseSystem),
     dialogField("命盤分宮制", houseSystemIndex),
@@ -1165,6 +1278,12 @@ function formPayload() {
     showStyle: settings.showStyle ? "true" : "false",
     styleLevel: String(settings.styleLevel),
     showAngleMarker: settings.showAngleMarker ? "true" : "false",
+    trueAsNorth: settings.trueAsNorth ? "true" : "false",
+    nightFortuneMode: settings.nightFortuneMode ? "true" : "false",
+    topocentric: settings.topocentric ? "true" : "false",
+    altitude: String(boundedNumber(settings.altitude, 0, -12000, 50000)),
+    ascInfluence: String(boundedNumber(settings.ascInfluence, 10, 0, 30)),
+    mcInfluence: String(boundedNumber(settings.mcInfluence, 10, 0, 30)),
     houseSystemIndex: String(settings.houseSystemIndex),
     pickHouseSystemIndex: String(settings.pickHouseSystemIndex),
     astroSystemMode: settings.astroSystemMode ? "true" : "false",
@@ -1176,7 +1295,9 @@ function formPayload() {
     pickAdjustMode: settings.pickAdjustMode ? "true" : "false",
     aspectDisplay: displayArrayFromSelection(settings.selectedAspects, ASPECT_CHOICES),
     angleMarkerDisplay: displayArrayFromSelection(settings.selectedAngleMarkers, ANGLE_MARKER_CHOICES),
-    signDisplay: signDisplayArrayFromSelection(settings.selectedPlanets),
+    signDisplay: signDisplayArrayFromSelection(settings.selectedPlanets, TRADITIONAL_SIGN_DISPLAY_DEFAULT),
+    astroSignDisplay: signDisplayArrayFromSelection(settings.astroSelectedPlanets, ASTRO_SIGN_DISPLAY_DEFAULT),
+    transitSignDisplay: transitDisplayArrayFromSelection(settings.transitSelectedPlanets),
     daySet: formData.daySet === "off" ? "false" : "true",
     timeAdjust: formData.timeAdjust || "2",
     mountainPos: formData.mountainPos || "0.0",
@@ -1198,11 +1319,41 @@ function displayArrayFromSelection(values, choices) {
   return choices.map((choice) => selected.has(choice) ? "1" : "0").join(",");
 }
 
-function signDisplayArrayFromSelection(values) {
+function selectionFromSignDisplay(displayArray) {
+  return PLANET_CHOICES.filter((_, index) => displayArray[index] > 0);
+}
+
+function selectionFromTransitDisplay(displayArray) {
+  return TRANSIT_PLANET_CHOICES.filter((_, index) => displayArray[index] > 0);
+}
+
+function signDisplayArrayFromSelection(values, displayDefaults) {
   const selected = new Set(values || []);
   return PLANET_CHOICES
-    .map((choice, index) => DEFAULT_SIGN_DISPLAY[index] < 0 ? "-1" : (selected.has(choice) ? "1" : "0"))
+    .map((choice, index) => displayDefaults[index] < 0 ? "-1" : (selected.has(choice) ? "1" : "0"))
     .join(",");
+}
+
+function transitDisplayArrayFromSelection(values) {
+  const selected = new Set(values || []);
+  return TRANSIT_PLANET_CHOICES.map((choice) => selected.has(choice) ? "1" : "0").join(",");
+}
+
+function currentPlanetSetting() {
+  const mode = chartValues().mode || "traditional";
+  const astro = mode === "western";
+  return {
+    mode,
+    settingName: astro ? "astroSelectedPlanets" : "selectedPlanets",
+    defaults: astro ? ASTRO_SIGN_DISPLAY_DEFAULT : TRADITIONAL_SIGN_DISPLAY_DEFAULT,
+    order: astro ? ASTRO_SIGN_ORDER : TRADITIONAL_SIGN_ORDER
+  };
+}
+
+function planetChoicesForMode(setting) {
+  return setting.order
+    .filter((index) => setting.defaults[index] >= 0)
+    .map((index) => PLANET_CHOICES[index]);
 }
 
 function positiveRectSize(rect) {
@@ -1483,7 +1634,7 @@ function fillForm(entry) {
   setChartValue("showHoriz", entry.showHoriz === true);
   setChartValue("singleWheel", entry.singleWheel === true);
   setChartValue("showMansions", entry.showMansions === true);
-  setChartValue("showAnnotations", entry.showAnnotations === true);
+  setChartValue("showAnnotations", entry.showAnnotations !== false);
   setChartValue("daySet", entry.daySet !== false);
   setChartValue("timeAdjust", entry.timeAdjust || "2");
   setChartValue("mountainPos", entry.mountainPos || "0.0");
@@ -1753,10 +1904,14 @@ function runMenuAction(action) {
     return;
   }
   if (action === "planet-settings") {
-    openComputedChecklist("選擇星曜", "selectedPlanets", PLANET_CHOICES);
+    openPlanetDialog("選擇星曜");
     return;
   }
-  if (action === "aspect-settings" || action === "angle-settings" || action === "strength-settings") {
+  if (action === "strength-settings") {
+    openPlanetDialog("選擇星曜及強勢角距");
+    return;
+  }
+  if (action === "aspect-settings" || action === "angle-settings") {
     if (action === "angle-settings") {
       const container = document.createElement("div");
       const enable = checkboxInput(settings.showAngleMarker);

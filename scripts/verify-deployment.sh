@@ -54,7 +54,7 @@ grep -q '流年星法(&T)...' "$HTML_FILE"
 grep -q '現在時間(&N)' "$HTML_FILE"
 grep -q '操作說明(&O)' "$HTML_FILE"
 grep -q 'name="mode" type="hidden"' "$HTML_FILE"
-grep -q 'app-ui-native-72' "$HTML_FILE"
+grep -q 'app-ui-native-73' "$HTML_FILE"
 if grep -q 'class="titlebar"' "$HTML_FILE"; then
   echo "Unexpected legacy fake titlebar found in HTML." >&2
   exit 1
@@ -109,6 +109,17 @@ for mode in traditional pick western sidereal; do
       end
     '
 done
+
+curl --fail --silent \
+  --header 'Content-Type: application/json' \
+  --data '{"mode":"western","astroMode":"natal","name":"DHX","sex":"male","birthDate":"2006-04-10","birthTime":"09:58","nowDate":"2026-05-17","nowTime":"09:00","country":"中国","city":"上海","zone":"Asia/Shanghai","imageWidth":"960","imageHeight":"720","trueAsNorth":"false","nightFortuneMode":"false","topocentric":"true","altitude":"12","ascInfluence":"8","mcInfluence":"9","signDisplay":"1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,-1,-1,-1,-1,-1","astroSignDisplay":"1,1,1,1,1,1,1,1,1,1,1,0,-1,1,1,1,1,1,0,0,0,0","transitSignDisplay":"1,1,1,1,1,1,1,1,1,1"}' \
+  "$BASE_URL/api/chart/compute" | ruby -rjson -e '
+    data = JSON.parse(STDIN.read)
+    unless data["chartPngBase64"].to_s.length > 1000
+      warn "Runtime option compute payload did not return a chart"
+      exit 1
+    end
+  '
 
 curl --fail --silent \
   --header 'Content-Type: application/json' \
