@@ -49,6 +49,8 @@ async function main() {
     ["檔案(&F)", "編輯(&E)", "選項(&P)", "搜索(&S)", "檢視(&V)", "說明(&H)"].forEach((label) => {
       assert(menubarText.includes(label), `Missing native-style menu label ${label}`);
     });
+    const disabledControls = await page.locator(".menubar [disabled]").count();
+    assert(disabledControls === 0, `Top menus should not expose disabled commands, got ${disabledControls}`);
 
     const app = await rect(page, ".app-window");
     const menubar = await rect(page, ".menubar");
@@ -116,6 +118,17 @@ async function main() {
     assert(submenu.x >= optionPanel.right - 10, `submenu should open to the right, got ${JSON.stringify({ optionPanel, submenu })}`);
     assert(submenu.right <= 1280, `submenu clipped beyond viewport: ${submenu.right}`);
     assert(submenu.width >= 188 && submenu.height >= 64, `submenu size looks wrong: ${JSON.stringify(submenu)}`);
+
+    await page.locator("details.menu:nth-of-type(4) > .menu-panel").getByText("色彩設定").click();
+    await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 3000 });
+    assert(await page.locator("#optionDialogTitle").innerText() === "色彩設定", "Color settings dialog did not open");
+    await page.locator("#optionDialog").getByText("Cancel").click();
+
+    await page.locator("details.menu").nth(4).locator(":scope > summary").click();
+    await page.locator("details.menu:nth-of-type(5) > .menu-panel").getByText("流年星法").click();
+    await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 3000 });
+    assert(await page.locator("#optionDialogTitle").innerText() === "流年星法", "Search dialog did not open");
+    await page.locator("#optionDialog").getByText("Cancel").click();
 
     await page.keyboard.press("Escape");
     await page.locator(".main-tabs .tab[data-view='manage']").click();

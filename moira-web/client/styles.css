@@ -34,6 +34,18 @@ body {
   text-rendering: auto;
 }
 
+body.high-resolution-ui {
+  font-size: 14px;
+}
+
+body.monochrome-chart .chart-canvas img {
+  filter: grayscale(1) contrast(1.08);
+}
+
+body.simplified-labels {
+  --blue-text: #000088;
+}
+
 button,
 input,
 select,
@@ -418,6 +430,10 @@ button {
   display: none;
 }
 
+body.print-with-notes .text-view.active {
+  display: grid;
+}
+
 .control-panel {
   position: absolute;
   top: 11px;
@@ -540,6 +556,138 @@ button {
 .manager-import {
   display: grid;
   gap: 6px;
+}
+
+.app-dialog {
+  width: min(520px, calc(100vw - 36px));
+  padding: 0;
+  color: #f2f2f2;
+  border: 1px solid #151515;
+  border-radius: 7px;
+  background: #858585;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.app-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.app-dialog form {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.app-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 30px;
+  padding: 0 10px;
+  border-bottom: 1px solid #6e6e6e;
+  background: #777;
+}
+
+.app-dialog h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.app-dialog header button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #f6f6f6;
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dialog-body {
+  display: grid;
+  gap: 10px;
+  max-height: min(62vh, 520px);
+  overflow: auto;
+  padding: 14px;
+  color: #101010;
+  background: #efefef;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dialog-body p {
+  margin: 0;
+}
+
+.dialog-body label,
+.dialog-body fieldset {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.dialog-body fieldset {
+  border: 1px solid #b8b8b8;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.dialog-body legend {
+  padding: 0 4px;
+  font-weight: 700;
+}
+
+.dialog-body input,
+.dialog-body select,
+.dialog-body textarea {
+  color: #111;
+  border: 1px solid #8a8a8a;
+  background: #fff;
+  box-shadow: none;
+}
+
+.dialog-body .check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px 12px;
+}
+
+.dialog-body .check-grid label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dialog-note {
+  color: #4e4e4e;
+  font-size: 12px;
+}
+
+.app-dialog menu {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 12px;
+  border-top: 1px solid #707070;
+  background: #858585;
+}
+
+.app-dialog menu button {
+  min-width: 86px;
+  min-height: 24px;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  background: #b2b2b2;
+  font-weight: 700;
+}
+
+.app-dialog menu button[value="default"],
+#optionDialogOk {
+  background: #2f73d9;
 }
 
 .gender-field {
@@ -789,6 +937,39 @@ input[type="checkbox"] {
   line-height: 1.35;
   white-space: pre-wrap;
   user-select: text;
+}
+
+@media print {
+  body {
+    overflow: visible;
+    background: #fff;
+  }
+
+  .menubar,
+  .main-tabs,
+  .subbar,
+  .control-panel,
+  .bottom-toolbar {
+    display: none !important;
+  }
+
+  .app-window,
+  .workspace,
+  .chart-view,
+  .chart-canvas {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    border: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .chart-canvas img {
+    width: 100% !important;
+    height: auto !important;
+  }
 }
 
 .manage-view {

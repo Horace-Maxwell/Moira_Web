@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>七政四餘星盤 - Moira</title>
-  <link rel="stylesheet" href="/styles.css?v=app-ui-native-59">
+  <link rel="stylesheet" href="/styles.css?v=app-ui-native-60">
 </head>
 <body>
   <div class="app-window">
@@ -24,20 +24,20 @@
           <button class="menu-command" type="button" data-action="save">存檔(&S) <span>Ctrl+S</span></button>
           <button class="menu-command" type="button" data-action="save-as">另存新檔(&A)...</button>
           <hr>
-          <button class="menu-command" type="button" disabled>列印(&P)... <span>Ctrl+P</span></button>
+          <button class="menu-command" type="button" data-action="print">列印(&P)... <span>Ctrl+P</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>圖形面積設定(&J)...</button>
-          <button class="menu-command" type="button" disabled>圖形存檔(&I)... <span>Ctrl+I</span></button>
+          <button class="menu-command" type="button" data-action="image-size">圖形面積設定(&J)...</button>
+          <button class="menu-command" type="button" data-action="save-image">圖形存檔(&I)... <span>Ctrl+I</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>開啟修改檔案(&M)...</button>
-          <button class="menu-command" type="button" disabled>修改還原(&R)</button>
+          <button class="menu-command" type="button" data-action="open-modification">開啟修改檔案(&M)...</button>
+          <button class="menu-command" type="button" data-action="restore-modification">修改還原(&R)</button>
           <hr>
-          <button class="menu-command" type="button" disabled>開啟解盤檔案(&E)...</button>
-          <button class="menu-command" type="button" disabled>解盤還原(&Q)</button>
-          <button class="menu-command" type="button" disabled>更新解盤檔案(&L) <span>F3</span></button>
+          <button class="menu-command" type="button" data-action="open-evaluation">開啟解盤檔案(&E)...</button>
+          <button class="menu-command" type="button" data-action="restore-evaluation">解盤還原(&Q)</button>
+          <button class="menu-command" type="button" data-action="refresh-evaluation">更新解盤檔案(&L) <span>F3</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>列印及圖形註釋(&F)...</button>
-          <button class="menu-command" type="button" disabled>儲存設定(&B)...</button>
+          <button class="menu-command" type="button" data-action="print-notes">列印及圖形註釋(&F)...</button>
+          <button class="menu-command" type="button" data-action="save-settings">儲存設定(&B)...</button>
           <hr>
           <button class="menu-command" type="button" data-action="append">加入資料</button>
           <button class="menu-command" type="button" data-action="delete">刪除資料</button>
@@ -50,23 +50,23 @@
         <summary>編輯(&E)</summary>
         <div class="menu-panel">
           <button class="menu-command" type="button" data-action="focus-name">輸入名稱及性別(&N)... <span>Cmd+N</span></button>
-          <button class="menu-command" type="button" disabled>陰曆轉換(&L)...</button>
+          <button class="menu-command" type="button" data-action="lunar-converter">陰曆轉換(&L)...</button>
           <hr>
-          <button class="menu-command" type="button" disabled>修改命宮(&H)...</button>
-          <button class="menu-command" type="button" disabled>修改星曜位置(&P)...</button>
+          <button class="menu-command" type="button" data-action="edit-life-palace">修改命宮(&H)...</button>
+          <button class="menu-command" type="button" data-action="edit-star-position">修改星曜位置(&P)...</button>
           <hr>
-          <button class="menu-command" type="button" disabled>復原(&Z) <span>Cmd+Z</span></button>
-          <button class="menu-command" type="button" disabled>取消復原(&Y) <span>Cmd+Shift+Z</span></button>
+          <button class="menu-command" type="button" data-action="undo">復原(&Z) <span>Cmd+Z</span></button>
+          <button class="menu-command" type="button" data-action="redo">取消復原(&Y) <span>Cmd+Shift+Z</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>剪下(&X) <span>Cmd+X</span></button>
+          <button class="menu-command" type="button" data-action="cut">剪下(&X) <span>Cmd+X</span></button>
           <button class="menu-command" type="button" data-action="copy">复制(&C) <span>Cmd+C</span></button>
-          <button class="menu-command" type="button" disabled>貼上(&V) <span>Cmd+V</span></button>
-          <button class="menu-command" type="button" disabled>刪除(&D) <span>DEL</span></button>
+          <button class="menu-command" type="button" data-action="paste">貼上(&V) <span>Cmd+V</span></button>
+          <button class="menu-command" type="button" data-action="delete-selection">刪除(&D) <span>DEL</span></button>
           <hr>
           <button class="menu-command" type="button" data-action="select-all">全部(&A) <span>Cmd+A</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>粗体</button>
-          <button class="menu-command" type="button" disabled>突显</button>
+          <button class="menu-command" type="button" data-action="bold">粗体</button>
+          <button class="menu-command" type="button" data-action="highlight">突显</button>
         </div>
       </details>
       <details class="menu">
@@ -83,13 +83,13 @@
           </details>
           <hr>
           <label class="menu-check-row"><input name="showNow" form="chartForm" type="checkbox" checked> 顯示流年(&N) <span>Ctrl+R</span></label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示三垣列宿</label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示開禧宿度(&N)</label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示高格林(&N)</label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示單圈(&N)</label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示地平方位 <span>Ctrl+P</span></label>
+          <label class="menu-check-row"><input name="showMansions" form="chartForm" type="checkbox"> 顯示三垣列宿</label>
+          <label class="menu-check-row"><input name="showFixstar" form="chartForm" type="checkbox"> 顯示開禧宿度(&N)</label>
+          <label class="menu-check-row"><input name="showGauquelin" form="chartForm" type="checkbox"> 顯示高格林(&N)</label>
+          <label class="menu-check-row"><input name="singleWheel" form="chartForm" type="checkbox"> 顯示單圈(&N)</label>
+          <label class="menu-check-row"><input name="showHoriz" form="chartForm" type="checkbox"> 顯示地平方位 <span>Ctrl+P</span></label>
           <label class="menu-check-row"><input name="showAspects" form="chartForm" type="checkbox"> 顯示相位(&A) <span>Ctrl+L</span></label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 顯示神煞註釋(&E) <span>Ctrl+E</span></label>
+          <label class="menu-check-row"><input name="showAnnotations" form="chartForm" type="checkbox"> 顯示神煞註釋(&E) <span>Ctrl+E</span></label>
           <hr>
           <details class="menu-cascade">
             <summary>修正時間(&T)...</summary>
@@ -98,8 +98,8 @@
               <button class="menu-command" type="button" data-set-control="timeAdjust" data-set-value="2" data-check-group="timeAdjust">真太陽時</button>
             </div>
           </details>
-          <button class="menu-command" type="button" disabled>立命安身(&X)...</button>
-          <button class="menu-command" type="button" disabled>選擇擇日計算&H)...</button>
+          <button class="menu-command" type="button" data-action="life-body-settings">立命安身(&X)...</button>
+          <button class="menu-command" type="button" data-action="pick-settings">選擇擇日計算&H)...</button>
           <hr>
           <details class="menu-cascade">
             <summary>項目顯示</summary>
@@ -113,22 +113,22 @@
           <details class="menu-cascade">
             <summary>工具列顯示</summary>
             <div class="menu-panel menu-subpanel">
-              <label class="menu-check-row"><input type="checkbox" checked disabled> 檔案圖示</label>
-              <label class="menu-check-row"><input type="checkbox" checked disabled> 編輯圖示</label>
-              <label class="menu-check-row"><input type="checkbox" checked disabled> 選項圖示</label>
-              <label class="menu-check-row"><input type="checkbox" checked disabled> 尋找 <span>Ctrl+F</span></label>
+              <label class="menu-check-row"><input type="checkbox" data-pref="toolbarFile" checked> 檔案圖示</label>
+              <label class="menu-check-row"><input type="checkbox" data-pref="toolbarEdit" checked> 編輯圖示</label>
+              <label class="menu-check-row"><input type="checkbox" data-pref="toolbarOptions" checked> 選項圖示</label>
+              <label class="menu-check-row"><input type="checkbox" data-pref="toolbarSearch" checked> 尋找 <span>Ctrl+F</span></label>
             </div>
           </details>
           <hr>
-          <button class="menu-command" type="button" disabled>選擇星曜(&I)...</button>
-          <button class="menu-command" type="button" disabled>選擇角距顯示(&O)...</button>
-          <button class="menu-command" type="button" disabled>選擇相位(&K)...</button>
-          <button class="menu-command" type="button" disabled>選擇星曜及強勢角距(&J)...</button>
-          <button class="menu-command" type="button" disabled>選擇分宮制(&H)...</button>
-          <button class="menu-command" type="button" disabled>選擇回歸恆星制(&S)...</button>
-          <button class="menu-command" type="button" disabled>選擇合盤計算(&U)...</button>
-          <button class="menu-command" type="button" disabled>選擇神煞(&S)...</button>
-          <button class="menu-command" type="button" disabled>選擇政餘格局(&Z)...</button>
+          <button class="menu-command" type="button" data-action="planet-settings">選擇星曜(&I)...</button>
+          <button class="menu-command" type="button" data-action="angle-settings">選擇角距顯示(&O)...</button>
+          <button class="menu-command" type="button" data-action="aspect-settings">選擇相位(&K)...</button>
+          <button class="menu-command" type="button" data-action="strength-settings">選擇星曜及強勢角距(&J)...</button>
+          <button class="menu-command" type="button" data-action="house-settings">選擇分宮制(&H)...</button>
+          <button class="menu-command" type="button" data-action="zodiac-settings">選擇回歸恆星制(&S)...</button>
+          <button class="menu-command" type="button" data-action="synastry-settings">選擇合盤計算(&U)...</button>
+          <button class="menu-command" type="button" data-action="spirit-settings">選擇神煞(&S)...</button>
+          <button class="menu-command" type="button" data-action="pattern-settings">選擇政餘格局(&Z)...</button>
           <hr>
           <details class="menu-cascade">
             <summary>占星模式</summary>
@@ -143,32 +143,32 @@
           </details>
           <label class="menu-check-row"><input name="daySet" form="chartForm" type="checkbox" checked> 晝盤</label>
           <hr>
-          <button class="menu-command" type="button" disabled>字形方向設定(&V)...</button>
-          <button class="menu-command" type="button" disabled>字形設定(&F)...</button>
+          <button class="menu-command" type="button" data-action="font-direction">字形方向設定(&V)...</button>
+          <button class="menu-command" type="button" data-action="font-settings">字形設定(&F)...</button>
           <hr>
-          <button class="menu-command" type="button" disabled>色彩設定(&C)...</button>
-          <label class="menu-check-row"><input type="checkbox" disabled> 黑白色(&B)</label>
-          <label class="menu-check-row"><input type="checkbox" disabled> 縮小在系統匣(&Q)</label>
+          <button class="menu-command" type="button" data-action="color-settings">色彩設定(&C)...</button>
+          <label class="menu-check-row"><input type="checkbox" data-pref="monochrome"> 黑白色(&B)</label>
+          <label class="menu-check-row"><input type="checkbox" data-pref="minimizeToTray"> 縮小在系統匣(&Q)</label>
           <hr>
-          <button class="menu-command" type="button" disabled>简体中文 (須重新啟動)(&L)</button>
+          <button class="menu-command" type="button" data-action="toggle-language">简体中文 (須重新啟動)(&L)</button>
           <hr>
-          <button class="menu-command" type="button" disabled>選項還原 (須重新啟動)(&R)</button>
+          <button class="menu-command" type="button" data-action="reset-options">選項還原 (須重新啟動)(&R)</button>
         </div>
       </details>
       <details class="menu">
         <summary>搜索(&S)</summary>
         <div class="menu-panel">
-          <button class="menu-command" type="button" disabled>流年星法(&T)... <span>Ctrl+K</span></button>
-          <button class="menu-command" type="button" disabled>主限法(&P)... <span>Ctrl+R</span></button>
-          <button class="menu-command" type="button" disabled>次限法(&S)... <span>Ctrl+L</span></button>
-          <button class="menu-command" type="button" disabled>太陽弧角法(&A)... <span>Ctrl+E</span></button>
+          <button class="menu-command" type="button" data-action="search-transit">流年星法(&T)... <span>Ctrl+K</span></button>
+          <button class="menu-command" type="button" data-action="search-primary">主限法(&P)... <span>Ctrl+R</span></button>
+          <button class="menu-command" type="button" data-action="search-secondary">次限法(&S)... <span>Ctrl+L</span></button>
+          <button class="menu-command" type="button" data-action="search-solar-arc">太陽弧角法(&A)... <span>Ctrl+E</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>動盤太陽到山時間(&A)...</button>
+          <button class="menu-command" type="button" data-action="search-sun-mountain">動盤太陽到山時間(&A)...</button>
           <hr>
-          <button class="menu-command" type="button" disabled>八字时间(&E)...</button>
-          <button class="menu-command" type="button" disabled>日蝕時間(&M)...</button>
-          <button class="menu-command" type="button" disabled>月蝕時間(&L)...</button>
-          <button class="menu-command" type="button" disabled>相位(&C)...</button>
+          <button class="menu-command" type="button" data-action="search-eight-time">八字时间(&E)...</button>
+          <button class="menu-command" type="button" data-action="search-solar-eclipse">日蝕時間(&M)...</button>
+          <button class="menu-command" type="button" data-action="search-lunar-eclipse">月蝕時間(&L)...</button>
+          <button class="menu-command" type="button" data-action="search-aspect">相位(&C)...</button>
           <hr>
           <button class="menu-command" type="button" data-action="focus-name">名稱輸入</button>
           <button class="menu-command" type="button" data-view-target="manage">資料管理</button>
@@ -179,9 +179,9 @@
         <div class="menu-panel">
           <button class="menu-command" type="button" data-action="update">更新(&U) <span>F1</span></button>
           <hr>
-          <button class="menu-command" type="button" disabled>現在時間(&N) <span>F2</span></button>
+          <button class="menu-command" type="button" data-action="set-current-time">現在時間(&N) <span>F2</span></button>
           <hr>
-          <label class="menu-check-row"><input type="checkbox" disabled> 高解析度使用者介面(&I)</label>
+          <label class="menu-check-row"><input type="checkbox" data-pref="highResolutionUi"> 高解析度使用者介面(&I)</label>
           <hr>
           <button class="menu-command" type="button" data-view-target="chart">星盘</button>
           <button class="menu-command" type="button" data-view-target="calculation">计算</button>
@@ -353,6 +353,7 @@
       <button id="updateEntry" type="button">更新</button>
       <button id="packEntry" type="button" hidden>Legacy DataEntry</button>
       <input id="mriFile" type="file" accept=".mri" hidden>
+      <input id="textImportFile" type="file" accept=".txt,.text,.ini,.conf,.prop,.json" hidden>
       <input class="archive-name" aria-label="資料檔名稱">
       <span class="toolbar-spacer"></span>
       <span id="rowCount">0 列</span>
@@ -369,6 +370,20 @@
     <ul id="guardrails"></ul>
   </div>
 
-  <script src="/app.js?v=app-ui-native-59"></script>
+  <dialog id="optionDialog" class="app-dialog">
+    <form method="dialog">
+      <header>
+        <h2 id="optionDialogTitle">設定</h2>
+        <button value="cancel" aria-label="關閉">×</button>
+      </header>
+      <div id="optionDialogBody" class="dialog-body"></div>
+      <menu>
+        <button value="cancel">Cancel</button>
+        <button id="optionDialogOk" value="default">OK</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="/app.js?v=app-ui-native-60"></script>
 </body>
 </html>
