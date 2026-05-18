@@ -1,8 +1,17 @@
 #!/usr/bin/env node
 
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8080";
+const browserName = process.env.MOIRA_WEB_BROWSER || "chromium";
+const browserType = { chromium, firefox, webkit }[browserName];
+
+if (!browserType) {
+  throw new Error(`Unsupported MOIRA_WEB_BROWSER=${browserName}`);
+}
 
 const MENU = {
   file: 2,
@@ -99,6 +108,10 @@ async function waitForCompute(page, predicate, label, timeout = 30000) {
   return payload;
 }
 
+async function inputValue(page, name) {
+  return page.locator(`[name="${name}"]`).inputValue();
+}
+
 async function runComputeDialog(page, menuNumber, action, title, configure, predicate, label = action) {
   await clickMenuAction(page, menuNumber, action);
   await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 5000 });
@@ -154,6 +167,63 @@ async function auditTextTabs(page) {
   await assertChartComputed(page, "return from text views");
 }
 
+async function auditDirectFormAndKeyboard(page) {
+  await page.locator(".main-tabs .tab[data-view='chart']").click();
+  await assertChartComputed(page, "direct form starting chart");
+
+  let request = waitForCompute(page, (payload) => payload.name === "直接输入测试", "direct-name");
+  await page.locator("input[name='name']").fill("直接输入测试");
+  await request;
+
+  request = waitForCompute(page, (payload) => payload.sex === "female", "direct-sex");
+  await page.locator("input[name='sex'][value='female']").check();
+  await request;
+
+  request = waitForCompute(page, (payload) => payload.country === "美國" && payload.city === "洛杉磯" && payload.zone === "America/Los_Angeles", "direct-place");
+  await page.locator("select[name='country']").selectOption("美國");
+  await page.locator("select[name='city']").selectOption("洛杉磯");
+  await page.locator("select[name='zone']").selectOption("America/Los_Angeles");
+  await request;
+
+  request = waitForCompute(page, (payload) => payload.birthDate === "1999-12-31" && payload.birthTime === "23:45", "direct-birth-date-row");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='month']").selectOption("12");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='day']").fill("31");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='year']").fill("1999");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='hour']").fill("11");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='minute']").fill(":45");
+  await page.locator(".moira-date-row[data-datetime='birth'] [data-part='ampm']").selectOption("PM");
+  await request;
+
+  request = waitForCompute(page, (payload) => payload.nowDate === "2028-01-02" && payload.nowTime === "00:05", "direct-now-date-row");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='month']").selectOption("1");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='day']").fill("2");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='year']").fill("2028");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='hour']").fill("12");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='minute']").fill(":05");
+  await page.locator(".moira-date-row[data-datetime='now'] [data-part='ampm']").selectOption("AM");
+  await request;
+
+  request = waitForCompute(page, (payload) => payload.name === "自动重算测试", "direct-auto-submit");
+  await page.locator("input[name='name']").fill("自动重算测试");
+  await request;
+
+  for (const [view, selector] of [
+    ["calculation", "#resultBox"],
+    ["eight", "#eightText"],
+    ["notes", "#noteText"]
+  ]) {
+    await page.locator(`.main-tabs .tab[data-view="${view}"]`).click();
+    await page.locator(`.app-window[data-current-view="${view}"]`).waitFor({ state: "attached", timeout: 5000 });
+    const text = (await page.locator(selector).innerText()).trim();
+    await page.locator(".workspace").click({ position: { x: 12, y: 12 } });
+    await page.keyboard.press("Control+A");
+    const selected = (await page.evaluate(() => String(window.getSelection()))).trim();
+    assert(selected === text, `Keyboard select-all failed for ${view}`);
+  }
+  await page.locator(".main-tabs .tab[data-view='chart']").click();
+  await assertChartComputed(page, "direct form return chart");
+}
+
 async function auditImageAndNoteDialogs(page) {
   await runComputeDialog(page, MENU.file, "image-size", "圖形面積設定", async () => {
     await page.locator("#optionDialogBody input[type='number']").nth(0).fill("1400");
@@ -169,6 +239,30 @@ async function auditImageAndNoteDialogs(page) {
   await runComputeDialog(page, MENU.edit, "lunar-converter", "陰曆轉換", async () => {
     await page.locator("#optionDialogBody input[type='date']").fill("2001-02-03");
   }, (payload) => payload.birthDate === "2001-02-03", "lunar-converter");
+}
+
+async function auditFileChooserImports(page) {
+  const directory = await mkdtemp(join(tmpdir(), "moira-web-audit-"));
+  const modificationPath = join(directory, "modification-note.txt");
+  const evaluationPath = join(directory, "evaluation-note.txt");
+  await writeFile(modificationPath, "文件导入修改内容", "utf8");
+  await writeFile(evaluationPath, "文件导入解盘内容", "utf8");
+
+  let chooser = page.waitForEvent("filechooser");
+  await clickMenuAction(page, MENU.file, "open-modification");
+  let fileChooser = await chooser;
+  const modificationCompute = waitForCompute(page, (payload) => payload.note === "文件导入修改内容", "open-modification-file");
+  await fileChooser.setFiles(modificationPath);
+  await modificationCompute;
+  assert(await inputValue(page, "note") === "文件导入修改内容", "open-modification did not populate note field");
+
+  chooser = page.waitForEvent("filechooser");
+  await clickMenuAction(page, MENU.file, "open-evaluation");
+  fileChooser = await chooser;
+  await fileChooser.setFiles(evaluationPath);
+  await page.locator(".app-window[data-current-view='notes']").waitFor({ state: "attached", timeout: 5000 });
+  assert((await page.locator("#noteText").innerText()).includes("文件导入解盘内容"),
+    "open-evaluation did not render imported text");
 }
 
 async function auditLifeAndPickDialogs(page) {
@@ -366,9 +460,23 @@ async function auditToolbarAndManager(page) {
   await page.locator("#updateEntry").click();
   assert((await page.locator("#entryTable").innerText()).includes("深度审计"), "update toolbar did not keep edited manager row");
 
+  await page.locator(".main-tabs .tab[data-view='chart']").click();
+  await page.locator("input[name='name']").fill("第二列");
+  await page.locator(".main-tabs .tab[data-view='manage']").click();
+  await page.locator("#saveEntry").click();
+  await page.locator("#entryTable tr").nth(1).waitFor({ state: "visible", timeout: 5000 });
+  await page.locator(".nudge-button[aria-label='下一列']").click();
+  assert((await page.locator("#entryTable tr.selected").innerText()).includes("深度审计"),
+    "next-row toolbar button did not select the next entry");
+  await page.locator(".nudge-button[aria-label='上一列']").click();
+  assert((await page.locator("#entryTable tr.selected").innerText()).includes("第二列"),
+    "previous-row toolbar button did not select the previous entry");
+
+  await page.locator(".archive-name").fill("客户 档案/测试");
   const jsonDownload = page.waitForEvent("download");
   await page.locator("#exportEntries").click();
-  assert((await jsonDownload).suggestedFilename().endsWith(".json"), "exportEntries did not download JSON");
+  assert((await jsonDownload).suggestedFilename() === "客户-档案-测试-entries.json",
+    "archive name did not drive JSON export filename");
   const exportedJson = await page.locator("#entryImport").inputValue();
   await page.locator("#deleteEntry").click();
   await page.locator("#entryImport").fill(exportedJson);
@@ -377,7 +485,9 @@ async function auditToolbarAndManager(page) {
 
   const mriDownload = page.waitForEvent("download");
   await page.locator("#exportMri").click();
-  assert((await mriDownload).suggestedFilename().endsWith(".mri"), "exportMri did not download MRI");
+  const downloadedMri = await mriDownload;
+  assert(downloadedMri.suggestedFilename() === "客户-档案-测试.mri",
+    "archive name did not drive MRI export filename");
   const mriBase64 = await page.locator("#entryImport").inputValue();
   await page.locator("#deleteEntry").click();
   await page.locator("#entryImport").fill(mriBase64);
@@ -385,42 +495,95 @@ async function auditToolbarAndManager(page) {
   await page.waitForFunction(() => document.querySelector("#entryTable")?.textContent?.trim().length > 0, null, { timeout: 30000 });
   assert((await page.locator("#entryTable tr").count()) >= 1, "importMri did not restore entries from pasted MRI data");
 
+  const mriPath = await downloadedMri.path();
+  assert(Boolean(mriPath), "MRI download path was not available for file chooser import");
+  await page.locator("#entryImport").fill("");
+  await page.locator("#deleteEntry").click();
+  const chooser = page.waitForEvent("filechooser");
+  await page.locator("#importMri").click();
+  const fileChooser = await chooser;
+  await fileChooser.setFiles(mriPath);
+  await page.waitForFunction(() => document.querySelector("#entryTable")?.textContent?.trim().length > 0, null, { timeout: 30000 });
+  assert((await page.locator("#entryTable tr").count()) >= 1, "importMri file chooser did not restore MRI entries");
+
   await page.locator("#entryTable tr").first().locator("td").first().dblclick();
   await assertChartComputed(page, "manager double click");
   assert(await page.locator(".app-window").getAttribute("data-current-view") === "chart", "manager double click did not return to chart");
 }
 
+async function auditReloadPersistence(page, watchPage) {
+  const before = await localSettings(page);
+  assert(before.themeColor === "#424242", "theme color was not available before reload persistence check");
+  assert(before.interfaceFont === "Noto Sans CJK TC", "font setting was not available before reload persistence check");
+  assert(before.showAngleMarker === true, "angle marker setting was not available before reload persistence check");
+  await page.evaluate(() => {
+    window.eval("entriesDirty = false");
+  });
+  const persistedPage = await page.context().newPage();
+  watchPage(persistedPage);
+  await persistedPage.goto(baseUrl, { waitUntil: "networkidle" });
+  await assertChartComputed(persistedPage, "reload persistence");
+  const after = await localSettings(persistedPage);
+  assert(after.themeColor === "#424242", "theme color did not persist after reload");
+  assert(after.interfaceFont === "Noto Sans CJK TC", "font setting did not persist after reload");
+  assert(after.showAngleMarker === true, "angle marker setting did not persist after reload");
+  const themeColor = await persistedPage.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--chrome").trim());
+  const family = await persistedPage.locator("body").evaluate((node) => node.style.fontFamily);
+  assert(themeColor === "#424242", `theme color did not apply after reload: ${themeColor}`);
+  assert(family.includes("Noto Sans CJK TC"), `font setting did not apply after reload: ${family}`);
+  await persistedPage.close();
+}
+
 async function main() {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await browserType.launch({ headless: true });
   const context = await browser.newContext({
     acceptDownloads: true,
     viewport: { width: 1440, height: 900 },
-    permissions: ["clipboard-read", "clipboard-write"]
+    permissions: browserName === "chromium" ? ["clipboard-read", "clipboard-write"] : []
   });
-  await context.addInitScript(() => localStorage.clear());
-  const page = await context.newPage();
-  const messages = [];
-  page.on("console", (message) => {
-    if (["error", "warning"].includes(message.type())) {
-      messages.push(`${message.type()}: ${message.text()}`);
+  await context.addInitScript(() => {
+    const auditStorageKey = "moira-web-audit-cleared";
+    if (!localStorage.getItem(auditStorageKey)) {
+      localStorage.clear();
+      localStorage.setItem(auditStorageKey, "true");
     }
   });
-  page.on("pageerror", (error) => messages.push(`pageerror: ${error.message}`));
+  const page = await context.newPage();
+  const messages = [];
+  let currentStage = "bootstrap";
+  const runStep = async (stage, task) => {
+    currentStage = stage;
+    return task();
+  };
+  const watchPage = (watchedPage) => {
+    watchedPage.on("console", (message) => {
+      if (["error", "warning"].includes(message.type())) {
+        messages.push(`${message.type()} at ${currentStage}: ${message.text()}`);
+      }
+    });
+    watchedPage.on("pageerror", (error) => messages.push(`pageerror at ${currentStage}: ${error.message}`));
+  };
+  watchPage(page);
 
   try {
-    await page.goto(baseUrl, { waitUntil: "networkidle" });
-    await assertChartComputed(page, "initial load");
-    await auditTextTabs(page);
-    await auditImageAndNoteDialogs(page);
-    await auditLifeAndPickDialogs(page);
-    await auditPlanetDialogs(page);
-    await auditAspectAndAngleDialogs(page);
-    await auditHouseZodiacAndSynastry(page);
-    await auditSpiritPatternFontAndColor(page);
-    await auditSearchInputs(page);
-    await auditToolbarAndManager(page);
+    await runStep("initial-load", async () => {
+      await page.goto(baseUrl, { waitUntil: "networkidle" });
+      await assertChartComputed(page, "initial load");
+    });
+    await runStep("text-tabs", () => auditTextTabs(page));
+    await runStep("direct-form-keyboard", () => auditDirectFormAndKeyboard(page));
+    await runStep("image-note-dialogs", () => auditImageAndNoteDialogs(page));
+    await runStep("file-chooser-imports", () => auditFileChooserImports(page));
+    await runStep("life-pick-dialogs", () => auditLifeAndPickDialogs(page));
+    await runStep("planet-dialogs", () => auditPlanetDialogs(page));
+    await runStep("aspect-angle-dialogs", () => auditAspectAndAngleDialogs(page));
+    await runStep("house-zodiac-synastry", () => auditHouseZodiacAndSynastry(page));
+    await runStep("spirit-pattern-font-color", () => auditSpiritPatternFontAndColor(page));
+    await runStep("search-inputs", () => auditSearchInputs(page));
+    await runStep("toolbar-manager", () => auditToolbarAndManager(page));
+    await runStep("reload-persistence", () => auditReloadPersistence(page, watchPage));
     assert(messages.length === 0, `Console/page errors during deep option audit:\n${messages.join("\n")}`);
-    console.log(`Deep option audit passed for ${baseUrl}`);
+    console.log(`Deep option audit passed for ${baseUrl} (${browserName})`);
     console.log("Audited dialog fields, dropdown choices, checkboxes, search inputs, toolbar import/export, and manager edit flows.");
   } finally {
     await context.close();

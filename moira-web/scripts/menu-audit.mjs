@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:8080";
+const browserName = process.env.MOIRA_WEB_BROWSER || "chromium";
+const browserType = { chromium, firefox, webkit }[browserName];
+
+if (!browserType) {
+  throw new Error(`Unsupported MOIRA_WEB_BROWSER=${browserName}`);
+}
 
 const MENU = {
   moira: 1,
@@ -221,11 +227,11 @@ async function fillDialogNumber(page, index, value) {
 }
 
 async function main() {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await browserType.launch({ headless: true });
   const context = await browser.newContext({
     acceptDownloads: true,
     viewport: { width: 1280, height: 800 },
-    permissions: ["clipboard-read", "clipboard-write"]
+    permissions: browserName === "chromium" ? ["clipboard-read", "clipboard-write"] : []
   });
   await context.addInitScript(() => {
     localStorage.clear();
@@ -590,7 +596,7 @@ async function main() {
     assert(missingViews.length === 0, `Unaudited view targets: ${missingViews.join(", ")}`);
     assert(messages.length === 0, `Console/page errors during audit:\n${messages.join("\n")}`);
 
-    console.log(`Menu audit passed for ${baseUrl}`);
+    console.log(`Menu audit passed for ${baseUrl} (${browserName})`);
     console.log(`Audited ${visitedActions.size} actions, ${visitedPrefs.size} prefs, ${visitedTabPanels.size} tab toggles, ${visitedControls.size} set-controls, ${visitedViews.size} view targets.`);
   } finally {
     await context.close();

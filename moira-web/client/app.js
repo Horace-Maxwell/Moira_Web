@@ -31,6 +31,8 @@ const updateEntryButton = document.querySelector("#updateEntry");
 const mriFileInput = document.querySelector("#mriFile");
 const packEntryButton = document.querySelector("#packEntry");
 const textImportFile = document.querySelector("#textImportFile");
+const nudgeButtons = [...document.querySelectorAll(".nudge-button")];
+const archiveNameInput = document.querySelector(".archive-name");
 const optionDialog = document.querySelector("#optionDialog");
 const optionDialogTitle = document.querySelector("#optionDialogTitle");
 const optionDialogBody = document.querySelector("#optionDialogBody");
@@ -556,9 +558,13 @@ async function clipboardWrite(text) {
 
 async function clipboardRead() {
   if (navigator.clipboard?.readText) {
-    const text = await navigator.clipboard.readText();
-    internalClipboardText = text;
-    return text;
+    try {
+      const text = await navigator.clipboard.readText();
+      internalClipboardText = text;
+      return text;
+    } catch {
+      return internalClipboardText;
+    }
   }
   return internalClipboardText;
 }
@@ -988,7 +994,7 @@ function downloadChartImage() {
   }
   const link = document.createElement("a");
   link.href = chartImage.src;
-  link.download = `moira-chart-${Date.now()}.png`;
+  link.download = `${archiveBaseName("moira-chart")}-${Date.now()}.png`;
   document.body.append(link);
   link.click();
   link.remove();
@@ -1576,6 +1582,20 @@ function syncSelectionInTable() {
       input.checked = selected;
     });
   });
+}
+
+function selectEntryByOffset(offset) {
+  if (entries.length === 0) {
+    notify("沒有資料列", "請先新增或匯入資料。");
+    return;
+  }
+  const currentIndex = Math.max(0, entries.findIndex((entry) => entry.id === selectedEntryId));
+  const nextIndex = (currentIndex + offset + entries.length) % entries.length;
+  const entry = entries[nextIndex];
+  selectedEntryId = entry.id;
+  fillForm(entry);
+  syncSelectionInTable();
+  notify("資料列已切換", `${nextIndex + 1} / ${entries.length}`);
 }
 
 function formatEntryDateTime(dateValue, timeValue) {
@@ -2212,7 +2232,7 @@ exportEntriesButton.addEventListener("click", () => {
   manageView.classList.add("show-import");
   const json = JSON.stringify(entries, null, 2);
   entryImport.value = json;
-  downloadText(json, "moira-web-entries.json", "application/json;charset=utf-8");
+  downloadText(json, `${archiveBaseName("moira-web")}-entries.json`, "application/json;charset=utf-8");
 });
 
 importEntriesButton.addEventListener("click", () => {
@@ -2343,10 +2363,10 @@ async function exportMri() {
     dataEntries: dataEntries.join("|"),
     pickEntries: pickEntries.join("|"),
     footer: "Moira Web",
-    fileName: "moira-web.mri"
+    fileName: `${archiveBaseName("moira-web")}.mri`
   });
   entryImport.value = exported.mriBase64;
-  downloadBase64(exported.mriBase64, exported.fileName || "moira-web.mri");
+  downloadBase64(exported.mriBase64, exported.fileName || `${archiveBaseName("moira-web")}.mri`);
   showResult({
     status: exported.status,
     dataCount: exported.dataCount,
@@ -2453,6 +2473,15 @@ function downloadText(value, fileName, type = "text/plain;charset=utf-8") {
   URL.revokeObjectURL(url);
 }
 
+function archiveBaseName(fallback = "moira-web") {
+  const raw = archiveNameInput?.value?.trim() || fallback;
+  const sanitized = raw
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return sanitized || fallback;
+}
+
 packEntryButton.addEventListener("click", async () => {
   try {
     const packed = await postJson("/api/entries/pack", formPayload());
@@ -2546,6 +2575,12 @@ updateEntryButton.addEventListener("click", () => {
   saveEntries();
   markEntriesDirty();
   renderEntries();
+});
+
+nudgeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectEntryByOffset(button.getAttribute("aria-label") === "上一列" ? -1 : 1);
+  });
 });
 
 entryTable.addEventListener("click", (event) => {
