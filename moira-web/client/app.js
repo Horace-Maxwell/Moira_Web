@@ -2604,9 +2604,6 @@ entryTable.addEventListener("click", (event) => {
 });
 
 entryTable.addEventListener("dblclick", async (event) => {
-  if (event.target.closest("td[data-field]")) {
-    return;
-  }
   const row = event.target.closest("tr[data-id]");
   if (!row) {
     return;

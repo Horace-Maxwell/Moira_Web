@@ -570,7 +570,7 @@ async function auditToolbarAndManager(page) {
   await page.waitForFunction(() => document.querySelector("#entryTable")?.textContent?.trim().length > 0, null, { timeout: 30000 });
   assert((await page.locator("#entryTable tr").count()) >= 1, "importMri file chooser did not restore MRI entries");
 
-  await page.locator("#entryTable tr").first().locator("td").first().dblclick();
+  await page.locator("#entryTable tr").first().locator("td[data-field='name']").dblclick();
   await assertChartComputed(page, "manager double click");
   assert(await page.locator(".app-window").getAttribute("data-current-view") === "chart", "manager double click did not return to chart");
 }
