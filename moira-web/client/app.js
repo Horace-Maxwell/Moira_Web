@@ -2634,11 +2634,14 @@ function openManagerEntryFromEvent(event) {
   return true;
 }
 
-entryTable.addEventListener("mousedown", (event) => {
+function openManagerEntryOnRepeatedPointer(event) {
   if (event.detail >= 2) {
     openManagerEntryFromEvent(event);
   }
-});
+}
+
+entryTable.addEventListener("pointerdown", openManagerEntryOnRepeatedPointer);
+entryTable.addEventListener("mousedown", openManagerEntryOnRepeatedPointer);
 
 entryTable.addEventListener("click", (event) => {
   if (event.detail >= 2 && openManagerEntryFromEvent(event)) {
