@@ -2560,11 +2560,7 @@ entryTable.addEventListener("click", (event) => {
   const editableCell = event.target.closest("td[data-field]");
   selectedEntryId = entry.id;
   fillForm(entry);
-  if (editableCell) {
-    syncSelectionInTable();
-  } else {
-    renderEntries();
-  }
+  syncSelectionInTable();
 });
 
 entryTable.addEventListener("dblclick", async (event) => {

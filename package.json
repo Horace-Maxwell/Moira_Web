@@ -6,6 +6,7 @@
     "playwright": "1.60.0"
   },
   "scripts": {
+    "options:audit": "node moira-web/scripts/deep-option-audit.mjs",
     "ui:check": "node moira-web/scripts/ui-layout-check.mjs",
     "ui:check:live": "./scripts/verify-ui-layout.sh"
   }
