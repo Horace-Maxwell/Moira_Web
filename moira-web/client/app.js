@@ -50,6 +50,7 @@ let lastChartLayout = null;
 let lastEditableElement = null;
 let internalClipboardText = "";
 let computeRequestId = 0;
+let managerOpenInFlight = false;
 let settings;
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -478,6 +479,16 @@ function switchView(view) {
       ensureChartResolution();
     });
   }
+}
+
+function activateView(view) {
+  const key = tabPanelSettingKey(view);
+  if (key && settings[key] === false) {
+    settings = { ...settings, [key]: true };
+    saveSettings();
+    applySettings();
+  }
+  switchView(view);
 }
 
 function ensureChartResolution() {
@@ -1197,10 +1208,10 @@ async function runSearchAction(action) {
   textTabs.hidden = false;
   if (action === "search-eight-time") {
     await computePayload(formPayload());
-    switchView("eight");
+    activateView("eight");
     return;
   }
-  switchView("calculation");
+  activateView("calculation");
 }
 
 function showChartResult(payload) {
@@ -1910,7 +1921,7 @@ function runMenuAction(action) {
     return;
   }
   if (action === "refresh-evaluation") {
-    computePayload(formPayload()).then(() => switchView("notes")).catch((error) => showResult({ error: error.message }));
+    computePayload(formPayload()).then(() => activateView("notes")).catch((error) => showResult({ error: error.message }));
     return;
   }
   if (action === "select-all") {
@@ -2117,7 +2128,7 @@ menuCommands.forEach((button) => {
       syncMenuCheckmarks();
     }
     if (button.dataset.viewTarget) {
-      switchView(button.dataset.viewTarget);
+      activateView(button.dataset.viewTarget);
     }
     if (button.dataset.action) {
       runMenuAction(button.dataset.action);
@@ -2547,7 +2558,7 @@ textImportFile.addEventListener("change", async () => {
       scheduleCompute();
     } else {
       noteTextNode.textContent = text;
-      switchView("notes");
+      activateView("notes");
       notify("解盤檔案已載入", file.name);
     }
   } catch (error) {
@@ -2588,8 +2599,52 @@ nudgeButtons.forEach((button) => {
   });
 });
 
+async function openManagerEntry(row) {
+  if (!row || managerOpenInFlight) {
+    return;
+  }
+  const entry = entries.find((item) => item.id === row.dataset.id);
+  if (!entry) {
+    return;
+  }
+  managerOpenInFlight = true;
+  try {
+    selectedEntryId = entry.id;
+    fillForm(entry);
+    syncSelectionInTable();
+    switchView("chart");
+    await computePayload(formPayload());
+  } finally {
+    managerOpenInFlight = false;
+  }
+}
+
+function closestElementFromEvent(event, selector) {
+  const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+  return target?.closest(selector) || null;
+}
+
+function openManagerEntryFromEvent(event) {
+  const row = closestElementFromEvent(event, "tr[data-id]");
+  if (!row) {
+    return false;
+  }
+  event.preventDefault();
+  void openManagerEntry(row);
+  return true;
+}
+
+entryTable.addEventListener("mousedown", (event) => {
+  if (event.detail >= 2) {
+    openManagerEntryFromEvent(event);
+  }
+});
+
 entryTable.addEventListener("click", (event) => {
-  const row = event.target.closest("tr[data-id]");
+  if (event.detail >= 2 && openManagerEntryFromEvent(event)) {
+    return;
+  }
+  const row = closestElementFromEvent(event, "tr[data-id]");
   if (!row) {
     return;
   }
@@ -2597,30 +2652,17 @@ entryTable.addEventListener("click", (event) => {
   if (!entry) {
     return;
   }
-  const editableCell = event.target.closest("td[data-field]");
   selectedEntryId = entry.id;
   fillForm(entry);
   syncSelectionInTable();
 });
 
 entryTable.addEventListener("dblclick", async (event) => {
-  const row = event.target.closest("tr[data-id]");
-  if (!row) {
-    return;
-  }
-  const entry = entries.find((item) => item.id === row.dataset.id);
-  if (!entry) {
-    return;
-  }
-  selectedEntryId = entry.id;
-  fillForm(entry);
-  renderEntries();
-  switchView("chart");
-  await computePayload(formPayload());
+  await openManagerEntry(closestElementFromEvent(event, "tr[data-id]"));
 });
 
 entryTable.addEventListener("input", (event) => {
-  const cell = event.target.closest("td[data-field]");
+  const cell = closestElementFromEvent(event, "td[data-field]");
   if (!cell) {
     return;
   }
@@ -2628,7 +2670,7 @@ entryTable.addEventListener("input", (event) => {
 });
 
 entryTable.addEventListener("blur", (event) => {
-  const cell = event.target.closest("td[data-field]");
+  const cell = closestElementFromEvent(event, "td[data-field]");
   if (!cell) {
     return;
   }
