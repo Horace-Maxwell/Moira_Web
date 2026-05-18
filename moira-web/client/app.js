@@ -51,6 +51,7 @@ let lastEditableElement = null;
 let internalClipboardText = "";
 let computeRequestId = 0;
 let managerOpenInFlight = false;
+let managerLastClick = { id: "", time: 0 };
 let settings;
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -2653,6 +2654,13 @@ entryTable.addEventListener("click", (event) => {
   }
   const entry = entries.find((item) => item.id === row.dataset.id);
   if (!entry) {
+    return;
+  }
+  const now = performance.now();
+  const repeatedRowClick = managerLastClick.id === row.dataset.id && now - managerLastClick.time < 550;
+  managerLastClick = { id: row.dataset.id, time: now };
+  if (repeatedRowClick && openManagerEntryFromEvent(event)) {
+    managerLastClick = { id: "", time: 0 };
     return;
   }
   selectedEntryId = entry.id;
