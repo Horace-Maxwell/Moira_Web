@@ -89,7 +89,11 @@ async function clickSetControl(page, cascadeIndex, control, value, visitedContro
   await command.click();
   visitedControls.add(`${control}=${value}`);
   assert(await inputValue(page, control) === value, `${control} did not change to ${value}`);
-  await requestPromise;
+  const payload = await requestPromise;
+  if (control === "mode" && value !== "western") {
+    assert(payload.astroMode === "natal",
+      `${control}=${value} should reset incompatible astrology mode, got ${payload.astroMode}`);
+  }
 }
 
 async function toggleFormCheckbox(page, name, visitedFormOptions, computePayloads) {

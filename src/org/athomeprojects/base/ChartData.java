@@ -3283,7 +3283,7 @@ public class ChartData {
                         int asc_color = draw.getColor("chart_asc_mk_color",
                                 use_bw);
                         draw.setForeground(asc_color);
-                        int table_offset = (int) (0.3 * height + 0.5);
+                        int table_offset = (int) (0.5 * height + 0.5);
                         draw.frameTable(1, x, y - table_offset, dim.x, dim.y,
                                 (LinkedList) aspects[2],
                                 (LinkedList) aspects[3]);

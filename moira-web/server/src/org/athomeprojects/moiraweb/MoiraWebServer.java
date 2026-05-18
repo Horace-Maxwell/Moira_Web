@@ -113,7 +113,7 @@ public final class MoiraWebServer {
                     return;
                 }
                 handler.handle(exchange);
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 error(exchange, requestId, ex);
             } finally {
                 log("request", "requestId", requestId, "method",
@@ -307,7 +307,7 @@ public final class MoiraWebServer {
         }
     }
 
-    private void error(HttpExchange exchange, String requestId, Exception ex)
+    private void error(HttpExchange exchange, String requestId, Throwable ex)
             throws IOException {
         if (ex instanceof StopHandling) {
             return;

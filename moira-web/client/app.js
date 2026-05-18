@@ -922,6 +922,7 @@ function openPickSettingsDialog() {
     settings.pickAdjustMode = adjustMode.checked;
     saveSettings();
     setChartValue("mode", "pick");
+    setChartValue("astroMode", "natal");
     setChartValue("daySet", daySet.checked ? "on" : "off");
     syncMenuCheckmarks();
     scheduleCompute();
@@ -1283,6 +1284,7 @@ function formPayload() {
   syncAllDateTimeWidgets();
   const formData = chartValues();
   const mode = formData.mode || "traditional";
+  const astroMode = mode === "western" ? (formData.astroMode || "natal") : "natal";
   const layout = chartLayoutMetrics();
   const devicePixelRatio = Math.max(1, window.devicePixelRatio || 1);
   const desiredPixelRatio = settings.highResolutionUi
@@ -1305,7 +1307,7 @@ function formPayload() {
   return {
     mode,
     entryType: mode === "pick" ? "pick" : "data",
-    astroMode: formData.astroMode || "natal",
+    astroMode,
     name: formData.name,
     sex: formData.sex,
     birthDate: formData.birthDate,
@@ -2108,6 +2110,9 @@ menuCommands.forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.setControl) {
       setChartValue(button.dataset.setControl, button.dataset.setValue);
+      if (button.dataset.setControl === "mode") {
+        setChartValue("astroMode", "natal");
+      }
       chartField(button.dataset.setControl)?.dispatchEvent(new Event("change", { bubbles: true }));
       syncMenuCheckmarks();
     }

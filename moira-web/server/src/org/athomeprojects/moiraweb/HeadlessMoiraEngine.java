@@ -50,6 +50,7 @@ final class HeadlessMoiraEngine {
     synchronized Map<String, ?> compute(Map<String, String> request) {
         int chartMode = parseChartMode(value(request, "mode", "traditional"));
         int astroMode = parseAstroMode(value(request, "astroMode", "natal"));
+        astroMode = compatibleAstroMode(chartMode, astroMode);
         ChartMode.setChartMode(chartMode);
         ChartMode.setAstroMode(astroMode);
         applyRuntimePreferences(request);
@@ -112,6 +113,7 @@ final class HeadlessMoiraEngine {
     synchronized Map<String, ?> search(Map<String, String> request) {
         int chartMode = parseChartMode(value(request, "mode", "traditional"));
         int astroMode = parseAstroMode(value(request, "astroMode", "natal"));
+        astroMode = compatibleAstroMode(chartMode, astroMode);
         ChartMode.setChartMode(chartMode);
         ChartMode.setAstroMode(astroMode);
         applyRuntimePreferences(request);
@@ -639,6 +641,11 @@ final class HeadlessMoiraEngine {
             return ChartMode.COMPARISON_MODE;
         }
         return ChartMode.NATAL_MODE;
+    }
+
+    private int compatibleAstroMode(int chartMode, int astroMode) {
+        return chartMode == ChartMode.ASTRO_MODE ? astroMode
+                : ChartMode.NATAL_MODE;
     }
 
     private String modeName(int mode) {

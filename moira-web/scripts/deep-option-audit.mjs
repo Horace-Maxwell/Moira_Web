@@ -63,7 +63,12 @@ async function setMode(page, mode) {
   await openOptionsCascade(page, 0);
   const request = waitForCompute(page, (payload) => payload.mode === mode, `mode=${mode}`);
   await page.locator(`details.menu:nth-of-type(4) .menu-subpanel:visible [data-set-control="mode"][data-set-value="${mode}"]`).click();
-  await request;
+  const payload = await request;
+  if (mode !== "western") {
+    assert(payload.astroMode === "natal",
+      `${mode} mode should reset incompatible astrology mode, got ${payload.astroMode}`);
+  }
+  return payload;
 }
 
 async function assertChartComputed(page, label) {
@@ -150,6 +155,20 @@ async function labelInput(page, text) {
 
 async function localSettings(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem("moira-web.settings") || "{}"));
+}
+
+async function postChartDirect(payload) {
+  const response = await fetch(new URL("/api/chart/compute", baseUrl).toString(), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  assert(response.ok, `direct chart compute failed ${response.status}: ${text.slice(0, 500)}`);
+  return JSON.parse(text);
 }
 
 async function auditTextTabs(page) {
@@ -444,6 +463,51 @@ async function auditSearchInputs(page) {
   }
 }
 
+async function auditModeCompatibility(page) {
+  await clickMenuAction(page, MENU.search, "search-primary");
+  await page.locator("#optionDialog[open]").waitFor({ state: "visible", timeout: 5000 });
+  const searchResponse = page.waitForResponse((response) => response.url().includes("/api/search/run"), { timeout: 30000 });
+  await page.locator("#optionDialogOk").click();
+  const searchResult = await searchResponse;
+  assert(searchResult.ok(), `search-primary failed before compatibility check: ${searchResult.status()}`);
+  assert(await inputValue(page, "mode") === "western", "search-primary did not switch to western mode");
+  assert(await inputValue(page, "astroMode") === "primary-direction",
+    "search-primary did not set primary-direction astro mode");
+
+  await openOptionsCascade(page, 0);
+  const switchRequest = waitForCompute(page,
+    (payload) => payload.mode === "traditional",
+    "primary-direction-to-traditional");
+  await page.locator("details.menu:nth-of-type(4) .menu-subpanel:visible [data-set-control='mode'][data-set-value='traditional']").click();
+  const switchPayload = await switchRequest;
+  assert(switchPayload.astroMode === "natal",
+    `switching back to traditional should send astroMode=natal, got ${switchPayload.astroMode}`);
+  assert(await inputValue(page, "astroMode") === "natal",
+    "switching back to traditional did not reset the hidden astroMode field");
+  await assertChartComputed(page, "primary-direction-to-traditional");
+
+  const directResult = await postChartDirect({
+    mode: "traditional",
+    astroMode: "primary-direction",
+    name: "",
+    sex: "male",
+    birthDate: "2026-05-17",
+    birthTime: "18:56",
+    country: "中國",
+    city: "北京",
+    zone: "Asia/Shanghai",
+    nowDate: "2026-05-17",
+    nowTime: "18:56",
+    imageWidth: "720",
+    imageHeight: "540"
+  });
+  assert(directResult.status === "computed", "direct incompatible mode request did not compute");
+  assert(directResult.mode === "traditional" && directResult.astroMode === "natal",
+    `backend did not normalize incompatible astro mode: ${directResult.mode}/${directResult.astroMode}`);
+  assert(String(directResult.chartImage || "").startsWith("data:image/png;base64,"),
+    "direct incompatible mode request did not return a PNG chart");
+}
+
 async function auditToolbarAndManager(page) {
   await page.locator(".main-tabs .tab[data-view='manage']").click();
   await page.locator("#saveEntry").click();
@@ -580,6 +644,7 @@ async function main() {
     await runStep("house-zodiac-synastry", () => auditHouseZodiacAndSynastry(page));
     await runStep("spirit-pattern-font-color", () => auditSpiritPatternFontAndColor(page));
     await runStep("search-inputs", () => auditSearchInputs(page));
+    await runStep("mode-compatibility", () => auditModeCompatibility(page));
     await runStep("toolbar-manager", () => auditToolbarAndManager(page));
     await runStep("reload-persistence", () => auditReloadPersistence(page, watchPage));
     assert(messages.length === 0, `Console/page errors during deep option audit:\n${messages.join("\n")}`);
